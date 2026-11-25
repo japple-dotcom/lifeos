@@ -10,7 +10,8 @@ name: Release
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
+    branches: [main]   # every push to main tests and builds all five apps (nothing is published)
+  workflow_dispatch:   # Actions > Release > Run workflow: tests, builds and publishes v<__version__>
 
 permissions:
   contents: write

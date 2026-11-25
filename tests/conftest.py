@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +11,16 @@ from lifeos.accounts import GoogleAccounts  # noqa: E402
 from lifeos.config import load_settings  # noqa: E402
 from lifeos.store import Store  # noqa: E402
 from lifeos.tools import Services  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _restore_environment():
+    """Each test starts with the environment the last one found: the demo sets LIFEOS_* keys for its own process, and
+    left behind they made later setup tests think Life OS was already set up (seen only in CI's test order)."""
+    saved = dict(os.environ)
+    yield
+    os.environ.clear()
+    os.environ.update(saved)
 
 
 class FakeHA:
