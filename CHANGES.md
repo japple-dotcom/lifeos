@@ -4,6 +4,8 @@
 Phone notifications now switch on even when the notification key brought across from an older install can't be
 read: Life OS keeps the old file beside it and makes a new key, so each phone turns notifications on once more. If
 notifications still can't start, the message on the phone and Settings > Check everything now say why.
+The Intel Mac app is rebuilt so notifications and encrypted backups work on it: download it again from the
+release page and replace the copy in Applications (an update file can't fix this one).
 
 ## 0.17.1
 Life OS now finds its own updates on GitHub (japple-dotcom/lifeos): Settings > Updates offers each new version, and

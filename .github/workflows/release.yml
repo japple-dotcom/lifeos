@@ -52,7 +52,10 @@ jobs:
       - name: Point the app at this repository's update feed
         run: |
           echo "{\"feed\": \"https://github.com/${{ github.repository }}/releases/latest/download/latest.json\"}" > lifeos/release.json
-      - run: pip install -r requirements.txt -r requirements-app.txt
+      # Ready-made packages only: on an Intel Mac a newer cryptography has none, and building it here links a second
+      # OpenSSL that clashes with Python's inside the app (notifications and backups then fail to load). pip picks
+      # the newest version that has a ready-made package for each machine instead.
+      - run: pip install --only-binary=cryptography -r requirements.txt -r requirements-app.txt
       - run: pyinstaller packaging/lifeos.spec --noconfirm
       - name: Sign the Mac app for this computer (ad hoc)
         if: runner.os == 'macOS'
@@ -148,10 +151,9 @@ jobs:
       - name: Check the essential apps were built
         run: |
           ls -la apps
-          for f in LifeOS-windows.exe lifeos-linux-x86_64 lifeos-linux-arm64; do
+          for f in LifeOS-windows.exe lifeos-linux-x86_64 lifeos-linux-arm64 LifeOS-mac-intel.dmg; do
             [ -f "apps/$f" ] || { echo "::error::$f wasn't built"; exit 1; }
           done
-          ls apps/LifeOS-mac-*.dmg >/dev/null 2>&1 || { echo "::error::Neither Mac app was built"; exit 1; }
           [ -f apps/LifeOS-mac-arm64.dmg ] || echo "::warning::No Apple-chip Mac build this time (GitHub had no machine free); the Intel one runs on Apple-chip Macs through Rosetta."
       - name: Update file and feed
         run: |
