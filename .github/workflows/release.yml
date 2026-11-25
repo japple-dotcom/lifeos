@@ -76,7 +76,7 @@ jobs:
             sleep 2
           done
           curl -fsS http://127.0.0.1:8840/health | grep -q '"setup":true' || { cat "$RUNNER_TEMP/run.log"; exit 1; }
-          curl -fsS http://127.0.0.1:8840/setup | grep -q "Welcome to Life OS"
+          curl -fsS -o "$RUNNER_TEMP/setup.html" http://127.0.0.1:8840/setup && grep -q "Welcome to Life OS" "$RUNNER_TEMP/setup.html"
           kill %1 || true
       - name: Check it opens the main app for a household that's already set up
         env:
@@ -96,13 +96,14 @@ jobs:
           curl -fsS http://127.0.0.1:8841/health
           echo
           ok=1
-          curl -fsS http://127.0.0.1:8841/app/ | grep -qi "<!doctype html" || ok=0
+          # (download to a file first: grep -q stops reading early, and pipefail then counts curl's write as a failure)
+          curl -fsS -o "$RUNNER_TEMP/app.html" http://127.0.0.1:8841/app/ && grep -qi "<!doctype html" "$RUNNER_TEMP/app.html" || ok=0
           curl -fsS -o /dev/null http://127.0.0.1:8841/app/app.js || ok=0
           curl -fsS -o /dev/null http://127.0.0.1:8841/app/wall.html || ok=0
           # Phone notifications must start inside the app (their packages are only imported when needed)
           curl -fsS -c "$RUNNER_TEMP/cj" -H 'Content-Type: application/json' \
             -d '{"key":"ci-household-key-123","person":"me"}' http://127.0.0.1:8841/api/login > /dev/null || ok=0
-          if curl -fsS -b "$RUNNER_TEMP/cj" http://127.0.0.1:8841/api/push/key | grep -q '"key"'; then
+          if curl -fsS -b "$RUNNER_TEMP/cj" -o "$RUNNER_TEMP/push.json" http://127.0.0.1:8841/api/push/key && grep -q '"key"' "$RUNNER_TEMP/push.json"; then
             echo "notifications ready"
           else
             echo "::error::notifications didn't start"; curl -sS -b "$RUNNER_TEMP/cj" http://127.0.0.1:8841/api/push/key; ok=0
