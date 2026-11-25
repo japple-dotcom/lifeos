@@ -76,6 +76,7 @@ shopping:
 mail:
   receipts: true        # order emails: learns what you buy and how often; warranties go into Renewals
   bills: true           # bill and direct debit emails: To-do > Money > Bills, with a warning when one goes up
+  deliveries: true      # dispatch and "out for delivery" emails: parcels on Today and the kitchen display
 school:
   # The school's email addresses or domains. Their emails become calendar events, to-dos for forms and
   # payments, and "pack PE kit" reminders the day before.
@@ -157,6 +158,28 @@ away:
 seasonal:
   have: [garden, gas boiler, car, outside tap]
   "off": []            # (quoted: a bare off means "false" in YAML)
+
+# v0.18 ------------------------------------------------------------------------------------------------------
+# Bin days (Home > Bin days, where they can also be set). A Home Assistant calendar from the Waste Collection
+# Schedule integration is found by itself; or type a rota. The reminder comes the night before.
+bins:
+  calendar: ""          # e.g. calendar.waste_collection_schedule (blank: Life OS looks for one)
+  remind_at: "19:30"
+  speak: true           # also say it on the speaker (Voice and speakers), outside quiet hours
+  rota: []              # e.g. [{bin: "Recycling (blue)", day: tue, every: 2, from: 2026-12-01}]
+# Who's in: Home Assistant's people (person.* entities follow each phone). Blank = all of them.
+presence:
+  people: []
+# Cleaning rota for the grown-ups (Home > Cleaning rota). Jobs can be switched off there; the robot vacuum is
+# chosen there too and only ever started (vacuum.start), on its days, while the house is empty.
+cleaning:
+  "off": []
+date_night:
+  start: "19:00"
+  end: "23:00"
+  nights: []            # e.g. [fri, sat]; blank = any evening you're both free
+kids:
+  star_target: 15       # stars a week on the kitchen tablet's star chart (chores, reading, homework)
 
 # Quick dinners, preferred on busy evenings when Life OS suggests the week's dinners.
 quick_meals: [pasta, stir fry, fajitas, omelette, soup]

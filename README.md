@@ -223,6 +223,14 @@ add `lifeos_key: <household key>` to `secrets.yaml`, restart Home Assistant, and
 buttons to Google Home. In the Google Home app, make one routine per phrase: starter "When I say...", action
 "Adjust Home devices → Scenes → Life OS: ...". **Say something** checks the speaker.
 
+**Life OS as Home Assistant's conversation agent (v0.18).** Settings → Voice and speakers → Talk to Life OS on a
+Home Assistant Voice speaker → **Download the Home Assistant integration**. Unzip it into Home Assistant's
+`config/custom_components/` (giving `custom_components/lifeos/manifest.json`), restart, add the **Life OS**
+integration (Life OS's address and the household key), then choose Life OS as the assistant's conversation agent.
+Everything said to that speaker goes to Life OS (`POST /api/voice/converse`, household key), which answers in a
+sentence or two and, when it asks a question back, tells the speaker to keep listening. The same safety rules
+apply as everywhere else.
+
 ### Bills and direct debits (To-do → Money)
 
 Energy, water, council tax, broadband, mobile, insurance: from bill and direct debit emails (`mail.bills`), or
@@ -294,6 +302,67 @@ before is kept in a `before-restore-...` folder.
 `/app/kids.html` (or **Chores** on the kitchen display): a grown-up types the household key once, then each child
 taps their name and the chores they've done. They can undo their own tap for 10 minutes. The tablet can't mark money
 as paid or change anything else; ticks from the tablet are marked "(on the tablet)" on the Home screen.
+
+On the same tablet (v0.18) the **Reading**, **Homework** and **Stars** tabs let a child log reading ("15 minutes"),
+tick homework that a grown-up added (Home → Reading, homework and stars) and see the week's star chart: a star per
+chore, for 10 minutes' reading in a day, and per homework (two if it's done early). Stars are never money. The
+tablet still can't add or remove homework, pay out, or change anything else.
+
+### Parcels (Today and the kitchen display)
+
+Dispatch, "out for delivery", "delivered" and "ready to collect" emails (Amazon, Royal Mail, Evri, DPD, Yodel,
+Parcelforce, UPS, DHL, InPost and the shops' own) are read like other emails: each once, labelled, treated as data.
+Today shows what's coming today, what's waiting to be collected and what's due in the next few days, with
+**Track** (the email's own https link), **Got it** and **Hide**. At 8:45 and 12:45, if a parcel's due and Home
+Assistant says nobody's home (or, without Home Assistant, both calendars are full in the day), you get one
+notification with the tracking link to pick a safe place. Life OS never changes a delivery itself.
+`mail: deliveries: false` turns it off.
+
+### Bin days (Home)
+
+Install **Waste Collection Schedule** from HACS in Home Assistant and choose your council: Life OS finds its
+calendar by itself (or choose it in Home → Bin days → Where the dates come from). Without Home Assistant, type
+each bin, its day and whether it's every week or every other week. The night before a collection (19:30 by
+default) there's a notification and, outside quiet hours, an announcement on the speaker. The kitchen display and
+"which bin goes out" on the speakers use the same dates.
+
+### Cleaning rota (Home)
+
+Weekly jobs for the two grown-ups (bathroom, hoovering, kitchen, beds, towels...) with points for effort. Each week
+the jobs that are due are shared so the points even up over four weeks; tick a job when it's done, **Swap** to
+give it to the other person, and **Put it in our to-do lists** to file each person's jobs into their own Google
+Tasks (so Gemini knows). Sunday evening says who's got what. Choose a **robot vacuum** (a Home Assistant vacuum)
+and its days: it starts once the house is empty (everyone's phone away), or at the latest time you set if you
+allow it with someone in. Never in quiet hours. Starting it is the only thing it can do.
+
+### Date night (Home)
+
+Evenings in the next four weeks when both of your calendars and the family calendar are clear (busy/free only),
+a ready message for the babysitter (contacts saved as babysitter, nanny or grandparent) to copy into a text or put
+in your Gmail drafts, ideas near `household.area` (real places from the web with Claude; map searches
+otherwise), and **Put it in the calendar**.
+
+### Babysitter sheet (Home)
+
+Fill it in once: address, both phones, other people to call, each child's bedtime and notes, house rules, Wi-Fi
+(the password only if you type it). **Open the sheet to print** gives one clean page (`/app/sitter.html`) with the
+UK emergency numbers at the top and the home manual's non-private entries. Nothing on it is sent anywhere.
+
+### Car running costs (To-do → Renewals → Cars → Running costs)
+
+Add fuel, charging, servicing, repairs, tyres, parking, insurance and tax with the mileage when you know it: the
+last 12 months by kind, per month, pence per mile and per litre, and miles a year. Servicing is every 10,000 miles
+or 12 months unless you change it; "Book a service" goes on the to-do list a month before. MOT advisories can be
+typed from the certificate, or come in by themselves with the free DVSA MOT history API (apply at
+documentation.history.mot.api.gov.uk; put the client ID, client secret, API key and token URL in Settings → Keys
+and addresses). Each advisory goes on the to-do list with one tap.
+
+### Live test (Settings → Check everything)
+
+Runs every Gmail, Tasks and Calendar feature against each connected account: a test to-do in its own list
+(added, read back, notes changed, ticked, deleted), a test calendar entry at 3am in 30 days (added, deleted), a
+search, a Gmail draft with no recipient (made, checked, deleted). Nothing is sent. Each step is timed and anything
+that fails is explained in plain English, with **Copy the report**.
 
 ### Ask for a better price
 
@@ -598,7 +667,13 @@ its own sign-in screen, she chooses her account and approves. You never see her 
 Only one is active at a time; both get the same tools, safety rules and approvals.
 Switch in the app (Settings → Assistant), or set `LIFEOS_PROVIDER` in `.env`. The choice is saved.
 Keys: `ANTHROPIC_API_KEY` for Claude, `GEMINI_API_KEY` (aistudio.google.com/apikey) for Gemini. You only need
-the one you use.
+the one you use. Claude is pay-as-you-go credit on console.anthropic.com (separate from any Claude subscription).
+Gemini has a free tier for its Flash models; choose the model in Settings → Keys and addresses (default
+`gemini-3.8-flash`). If the assistant can't answer, the app says why in plain English (no credit, wrong key, a
+model that isn't free, the daily limit) and Settings → Check everything does too.
+
+**Lost the household key?** On the computer Life OS runs on, click the Life OS icon in the menu bar (Mac) or
+system tray (Windows) → **Show household key**. That page only opens from there and stops working after 10 minutes.
 
 ## Safety built in
 

@@ -145,6 +145,25 @@ Weekly pocket money is added every Saturday. Under **Pocket money and saving** e
 something: tap **Put £X towards it** to move what they're owed into it. The kitchen display shows how close they
 are.
 
+On the kitchen tablet the children also log their **reading** (tap how many minutes), tick off **homework** a
+grown-up has added (Home → Reading, homework and stars → Add homework), and see their **stars** for the week. Stars
+are just for fun; pocket money still only comes from chores.
+
+## Around the house
+
+- **Parcels**: Today shows what's arriving, with **Track**, **Got it** and **Hide**. If one's due and nobody's
+  home, you get a nudge to choose a safe place.
+- **Bin days**: Home → Bin days shows the next collection; there's a reminder the night before (and on the kitchen
+  speaker).
+- **Cleaning rota**: Home → Cleaning rota shares this week's jobs fairly between us. Tap **Done** when you've done
+  one, **Swap** if the other person's taking it. The robot vacuum runs on its days once we've both gone out.
+- **Date night**: Home → Date night shows evenings we're both free, writes the message for the babysitter (copy it
+  into a text, or put it in Gmail drafts) and suggests places nearby. **Put it in the calendar** books it.
+- **Babysitter sheet**: Home → Babysitter sheet → **Open the sheet to print** for whoever's looking after the
+  children: phone numbers, bedtimes, house rules and where things are.
+- **Car running costs**: To-do → Renewals → Cars → **Running costs**. Add fuel and bills as you go; it works out
+  the cost per mile and when the next service is due, and lists the MOT advisories.
+
 ## Parties, recipes and better prices
 
 **To-do → Projects → Plan a party**: the jobs, a party-day checklist and the calendar entry. Add the guests (with a
@@ -173,7 +192,9 @@ themselves; we still tap **Mark as paid** on Home.
 On the Google speakers, the phrases we've set up: "Hey Google, what's for dinner?", "what's on today?", "what's
 on the shopping list?", "can we leave?" and so on; the answer comes out of the speaker. "Hey Google, add
 milk to my to-dos" puts it on the Shopping list. The morning brief is read out in the kitchen at 7:15 on
-weekdays. To say anything else to Life OS, use Home Assistant's voice assistant: "ask Life OS to ...".
+weekdays. To say anything else to Life OS, use Home Assistant's voice assistant: "ask Life OS to ...". On a
+Home Assistant Voice speaker set up with Life OS as its conversation agent, just talk: if Life OS asks a question
+back, answer it straight away.
 
 ## Quiet hours
 
@@ -193,7 +214,11 @@ choose it under **Install an update file**.
 - **Google things missing**: Settings → Google accounts → Reconnect.
 - **No notifications**: Settings → Notifications → Send a test notification.
 - **Words too small**: Settings → Text size → Large or Extra large.
-- Anything else: tell whoever set it up; they can run the "doctor" check, which explains what's wrong.
+- **"That household key is not right"**: on the Mac, click the Life OS icon at the top of the screen → **Show
+  household key**.
+- **The assistant can't answer**: the message says why (for example, the Claude account needs credit). Settings →
+  Check everything shows it too.
+- Anything else: Settings → Check everything, which explains what's wrong.
 
 ## Privacy
 

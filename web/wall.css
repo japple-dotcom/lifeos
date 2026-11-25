@@ -64,3 +64,19 @@ html.wall main { max-width: none; padding: 2vh 2.5vw; min-height: 100dvh; }
 .kids-cheer.sad { background: var(--danger); }
 @media (prefers-reduced-motion: reduce) { .kids-cheer { transition: none; } }
 .chores-link { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.2rem; margin-top: 0.6rem; color: var(--accent); }
+
+/* ---------- v0.18: bins, parcels, stars on the tablet ---------- */
+.bins-line.urgent { color: var(--text); font-weight: 800; }
+.kids-modes { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.kid-mode { font: inherit; font-size: 1.15rem; font-weight: 700; min-height: 3rem; padding: 0 1.2rem; border-radius: 12px; cursor: pointer;
+  background: transparent; color: var(--text); border: 2px solid var(--border); }
+.kid-mode[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.kid-mode:focus-visible { outline: 4px solid var(--accent); outline-offset: 3px; }
+.kid-book { max-width: 30rem; margin: 0.6rem 0; }
+.kid-book input { font-size: 1.2rem; min-height: 3rem; }
+.star-chart { margin-bottom: 1.4rem; }
+.star-chart progress { width: 100%; height: 1rem; accent-color: var(--accent); }
+.star-days { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
+.star-days li { display: grid; justify-items: center; gap: 0.2rem; padding: 0.5rem 0.2rem; border: 2px solid var(--border); border-radius: 12px; }
+.star-days .d { font-weight: 700; }
+.star-days .s { color: var(--accent); font-size: 1.2rem; letter-spacing: 0.05em; min-height: 1.5rem; }

@@ -263,7 +263,9 @@ def _plus_hour(hm: str) -> str:
 
 def run(svc, agent) -> dict:
     out = {}
-    for key, fn in (("receipts", read_receipts), ("bills", read_bills), ("school", read_school)):
+    from . import deliveries
+    for key, fn in (("receipts", read_receipts), ("bills", read_bills), ("school", read_school),
+                    ("deliveries", deliveries.read_emails)):
         try:
             out[key] = fn(svc, agent)
         except Exception:

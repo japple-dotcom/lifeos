@@ -12,6 +12,9 @@ through a fixed set of tools, under a safety policy that makes money, messages a
 - Front end: plain HTML/CSS/JS, no build step, no framework (`web/`). Service worker `web/sw.js`.
 - Tests: pytest; Playwright + Chrome for `tests/test_e2e_browser.py` (skipped if not installed).
 
+Front end v0.18: new screens live in `web/more.js`, which app.js calls through `hook(name, data)` after Today, Home,
+Settings and Cars load (helpers shared as `window.LifeOS`). `web/sitter.html|js|css` is the printable sheet.
+
 ## How it runs (v0.15): an app with code layers
 - `lifeos_boot.py` (repo root) is the entry point everywhere: the app download, `install-mac.sh`'s Life OS.app,
   systemd (`install-box.sh`, `lifeos install-service`) and Docker. It is the ONLY file updates never replace: keep
@@ -102,6 +105,25 @@ lifeos/                 the service
   agenda.py             Sunday agenda built from the other modules, each section isolated; sunday() notification
   party.py              Party planner: jobs, Tasks checklist, calendar, invites as Gmail drafts, replies read
                         (check_replies every 30 min), RSVPs, food to Shopping
+  presence.py           Who's in from HA person.* entities (presence.people); None when unknown
+  bins.py               Bin days: HA calendar (Waste Collection Schedule, found by itself) or a typed rota; evening()
+                        reminder + speak the night before; spoken() for the "bins" speaker answer
+  deliveries.py         Parcels from dispatch/delivery emails (DELIVERY_TOOL, rule fallback guess()), records "parcel"
+                        (never moves backwards), Today/wall views, nudge() when one's due and nobody's in
+  sitter.py             Babysitter sheet (records "sitter"), merged with kids, adults, contacts, non-private manual
+  datenight.py          Evenings all adults + family calendar are free (busy/free only), babysitter message (copy or
+                        Gmail draft, never sent), ideas (Claude web search or map links), book -> calendar
+  kidstuff.py           Reading log, homework (adults add; tablet ticks), weekly stars; tablet undo 10 min
+  cleaning.py           Fair rota (points over 4 weeks), tick/swap/file to Google Tasks, robot vacuum: vacuum.start
+                        only, on its days, house empty or at the latest time, never in quiet hours
+  carcosts.py           Car costs (records "car_cost"), per mile/per litre, service due by miles/time, MOT advisories
+                        (typed or DVSA MOT history API, MOT_* keys) -> to-dos
+  livetest.py           Live test of Tasks/Calendar/Gmail per account: makes, checks and deletes its own test items,
+                        never sends; plain-English failures; report in records "livetest"
+  assist.py             HA conversation agent: converse() (/api/voice/converse, key) with 5-minute history and a
+                        follow-up flag; integration_files()/zip for config/custom_components/lifeos
+  aierrors.py           Assistant errors in plain English (credit, key, model, limits) for Ask, doctor, voice, live test
+  routes18.py           Thin routes for the v0.18 features, added from create_app; /local/key (menu bar only)
   store.records         Generic records table (kind, id, JSON, at) for the v0.15+ features; meals.rating column.
                         Pocket money: allowance (state), goals (records "goal"); money moves are chore_log rows
                         (household.is_money_move keeps them off the chores list)
@@ -174,7 +196,10 @@ Releasing: bump `__version__`, add a CHANGES.md section, tag `vX.Y.Z` and push (
   AA, 48 px+ targets, labels on every control, live regions for updates; re-run the axe check after UI changes.
   Bump the `CACHE` name in `web/sw.js` and `__version__` in `lifeos/__init__.py` when shipping.
 - Dates and times are UK (Europe/London). Plain English in all user-facing text.
-- The kids' tablet (KIDS role) may only tick chores and undo its own tick; paying out stays adult-only. Away mode
+- The kids' tablet (KIDS role) may only tick chores, log reading, tick homework and undo its own tick (10 minutes);
+  adding/removing homework and paying out stay adult-only. Stars are never money.
+- The robot vacuum is the only thing the cleaning rota switches on (vacuum.start). Deliveries never change a
+  delivery. The household key page (/local/key) only opens with the menu bar icon's 10-minute token. Away mode
   only lowers/raises heating and switches listed lights; never unlocks, opens or disarms. Recipe fetching refuses
   non-public addresses. Haggle and party emails are Gmail drafts only.
 - **Voice** never adds new powers: Assist text goes through the agent and its policies; HA `notify` stays refused

@@ -46,6 +46,18 @@ class Controller:
         self.tray = None
         self.started = time.time()
         self.trial = bool(os.environ.get("LIFEOS_TRIAL"))
+        self.key_token, self.key_token_until = "", 0.0
+
+    def key_page(self) -> str:
+        """A link to the 'household key' page that only works for 10 minutes and only from the menu bar icon."""
+        import secrets
+        self.key_token, self.key_token_until = secrets.token_urlsafe(24), time.time() + 600
+        return self.url(f"/local/key?t={self.key_token}")
+
+    def key_token_ok(self, token: str) -> bool:
+        import hmac
+        return bool(self.key_token) and time.time() < self.key_token_until and \
+            hmac.compare_digest(token or "", self.key_token)
 
     def request_restart(self, extra: list[str] | None = None, drop: tuple[str, ...] = (), delay: float = 0.6) -> None:
         _restart.update(extra=list(extra or []), drop=tuple(drop))
@@ -285,8 +297,12 @@ def _run_tray(ctl: Controller) -> bool:
             except Exception as e:
                 log.warning("start at login: %s", e)
 
+        def show_key(*_):
+            webbrowser.open(ctl.key_page())
+
         menu = pystray.Menu(
             pystray.MenuItem("Open Life OS", open_app, default=True),
+            pystray.MenuItem("Show household key", show_key, visible=lambda _: ctl.mode == "normal"),
             pystray.MenuItem(f"Life OS {__version__}" + (" (sample data)" if ctl.mode == "demo" else ""), None, enabled=False),
             pystray.MenuItem("Start when I log in", toggle_login, checked=lambda _: autostart.enabled()),
             pystray.MenuItem("Quit Life OS", lambda *_: ctl.request_quit(delay=0)))

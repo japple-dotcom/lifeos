@@ -27,6 +27,12 @@
     p.setAttribute("d", "m5 12.5 4.5 4.5L19 7.5"); s.append(p); return s;
   };
 
+  // v0.18 screens live in more.js; it's told when a screen has loaded (and never stops this one if it fails)
+  function hook(name, data) {
+    try { const m = window.LifeOSMore; if (m && typeof m[name] === "function") m[name](data); }
+    catch (e) { console.warn("more.js", name, e); }
+  }
+
   let toastTimer;
   function toast(message, isError = false) {
     const t = $("#toast");
@@ -386,6 +392,7 @@
     $("#chores-list").replaceChildren(...(data.chores.length ? data.chores.map((c) => el("li", {},
       el("span", { text: c.chore }), el("span", { class: "meta", text: ` · ${c.who || "someone"}, ${new Date(c.at).toLocaleString("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit" })}` })))
       : [el("li", { class: "empty", text: "No chores logged yet." })]));
+    hook("today", data);
   }
   $("#today-refresh").addEventListener("click", (ev) => busy(ev.currentTarget, async () => { await loadToday(true); toast("Up to date"); }));
 
@@ -1794,6 +1801,7 @@
         onclick: (ev) => { if (!confirm(`Remove ${x.name} and its MOT and tax reminders?`)) return;
           busy(ev.currentTarget, async () => { await api("/api/cars/delete", { method: "POST", body: { reg: x.reg } }); loadCars(); loadRenewals(); }); } })))
       : [el("li", { class: "empty", text: "No cars yet." })]));
+    hook("cars", c);
   }
   $("#car-form").addEventListener("submit", (ev) => {
     ev.preventDefault();
@@ -1883,6 +1891,7 @@
     loadManual();
     loadGifts();
     loadContacts();
+    hook("home");
     $("#status-list").replaceChildren(...(data.states.length ? data.states.map((s) => el("li", { class: "row" },
       el("span", { class: "grow", text: s.name }), el("span", { class: "state", text: humanState(s.state) })))
       : [el("li", { class: "empty", text: "No devices to show yet." })]));
@@ -2039,6 +2048,7 @@
     renderVoice().catch(() => {});
     renderSetupAll().catch(() => { $("#setup-all").hidden = true; });
     renderBackups().catch(() => {});
+    hook("settings");
     try {
       const p = await api("/api/provider");
       const radio = $(`#ai-${p.provider}`);
@@ -2357,6 +2367,10 @@
     $("#k-gemini-state").textContent = said(sys.keys.gemini, "Gemini key");
     $("#k-ha-state").textContent = said(sys.keys.ha, "Home Assistant token");
     $("#k-url-state").textContent = `Now: ${sys.public_url}`;
+    $("#k-gemini-model-state").textContent = sys.gemini_model ? `Now: ${sys.gemini_model}. If Gemini says the model isn't free or doesn't exist, choose another.` : "";
+    $("#gemini-models").replaceChildren(...(sys.gemini_models || []).map((m) => el("option", { value: m })));
+    $("#k-mot-state").textContent = sys.keys.mot ? "The DVSA keys are saved. MOT histories come in by themselves."
+      : "For MOT advisories and the mileage at each MOT. Apply free at documentation.history.mot.api.gov.uk; DVSA emails all four.";
     state.sysVersion = sys.version;
   }
   $("#sys-auto").addEventListener("change", (ev) => busy(null, async () => {
@@ -2388,7 +2402,9 @@
     busy(ev.submitter, async () => {
       const r = await api("/api/system/keys", { method: "POST", body: {
         anthropic_api_key: $("#k-anthropic").value, gemini_api_key: $("#k-gemini").value, public_url: $("#k-url").value,
-        ha_url: $("#k-ha-url").value, ha_token: $("#k-ha-token").value, dvla_api_key: $("#k-dvla").value, octopus_tariff: $("#k-octopus").value } });
+        ha_url: $("#k-ha-url").value, ha_token: $("#k-ha-token").value, dvla_api_key: $("#k-dvla").value, octopus_tariff: $("#k-octopus").value,
+        gemini_model: $("#k-gemini-model").value.trim(), mot_client_id: $("#k-mot-id").value.trim(), mot_client_secret: $("#k-mot-secret").value,
+        mot_api_key: $("#k-mot-key").value, mot_token_url: $("#k-mot-url").value.trim() } });
       ev.target.reset();
       toast(`Saved: ${r.changed.length} change${r.changed.length === 1 ? "" : "s"}`);
       if (r.restart) await waitForRestart(state.sysVersion, $("#sys-update"));
@@ -2612,6 +2628,8 @@
     $("#add-text").focus();
   }
   window.addEventListener("hashchange", () => { if (location.hash === "#add") { takeShared(); openShared(); } });
+
+  window.LifeOS = { $, el, api, toast, busy, openDialog, AuthError, shortDate, prefs };
 
   async function boot() {
     takeShared();

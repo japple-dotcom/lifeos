@@ -65,8 +65,8 @@ def start_scheduler(agent) -> BackgroundScheduler:
                   id="housekeeping", max_instances=1, coalesce=True)
     # v0.15: car dates weekly, subscription nudges daily, childcare gaps on Sunday evening, appliance cycles every
     # 10 minutes, cheap-time plugs every 5 minutes, and a morning check that whoever's in for a visit still is.
-    from . import (adminhour, agenda, away, care, cars, childcare, energy, household, money, offsite, party, schoolrun,
-                   seasonal, trades, trips)
+    from . import (adminhour, agenda, away, bins, carcosts, care, cars, childcare, cleaning, deliveries, energy,
+                   household, money, offsite, party, schoolrun, seasonal, trades, trips)
     v = agent.svc
     for job_id, fn, trig in (
             ("cars", _safe("cars", lambda: cars.weekly(v)), CronTrigger(day_of_week="mon", hour=6, minute=40, timezone=s.tz)),
@@ -93,7 +93,18 @@ def start_scheduler(agent) -> BackgroundScheduler:
             ("agenda", _safe("Sunday agenda", lambda: agenda.sunday(v)),
              CronTrigger(day_of_week="sun", hour=18, minute=50, timezone=s.tz)),
             ("party_replies", _safe("party replies", lambda: party.check_replies(v)),
-             CronTrigger(minute="10,40", hour="7-22", timezone=s.tz))):
+             CronTrigger(minute="10,40", hour="7-22", timezone=s.tz)),
+            # v0.18
+            ("deliveries_read", _safe("deliveries", lambda: deliveries.read_emails(v, agent)),
+             CronTrigger(minute=25, hour="8,11", timezone=s.tz)),
+            ("deliveries_nudge", _safe("parcel nudge", lambda: deliveries.nudge(v)),
+             CronTrigger(minute=45, hour="8,12", timezone=s.tz)),
+            ("bins", _safe("bins", lambda: bins.evening(v)), CronTrigger(minute="*/10", hour="16-21", timezone=s.tz)),
+            ("vacuum", _safe("vacuum", lambda: cleaning.vacuum_tick(v)), CronTrigger(minute="*/15", hour="8-18", timezone=s.tz)),
+            ("cleaning", _safe("cleaning rota", lambda: cleaning.sunday(v)),
+             CronTrigger(day_of_week="sun", hour=18, minute=55, timezone=s.tz)),
+            ("car_costs", _safe("car costs", lambda: carcosts.weekly(v)),
+             CronTrigger(day_of_week="mon", hour=6, minute=45, timezone=s.tz))):
         sched.add_job(fn, trig, id=job_id, max_instances=1, coalesce=True)
     # Spoken announcements on a Google speaker (voice.announce in settings.yaml), e.g. the brief at 07:15 on weekdays.
     from . import voice

@@ -20,7 +20,9 @@ WORDS = ["amber", "apple", "atlas", "beacon", "birch", "breeze", "cedar", "cliff
 PLACEHOLDER = re.compile(r"^(|change-me.*|.*\.\.\.)$")
 # Only these can be changed from the app; anything else in .env is left exactly as it is.
 EDITABLE = {"LIFEOS_PROVIDER", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "LIFEOS_PUBLIC_URL", "HA_URL", "HA_TOKEN",
-            "DVLA_API_KEY", "OCTOPUS_TARIFF"}
+            "DVLA_API_KEY", "OCTOPUS_TARIFF", "GEMINI_MODEL", "GEMINI_MODEL_DEEP", "MOT_CLIENT_ID", "MOT_CLIENT_SECRET",
+            "MOT_API_KEY", "MOT_TOKEN_URL"}
+GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash"]
 
 
 def read_env(path: Path | None = None) -> dict[str, str]:
@@ -137,6 +139,11 @@ def update_env(changes: dict[str, str]) -> list[str]:
             raise ValueError("The address must start with https:// (or be http://localhost for this computer only).")
     if "LIFEOS_PROVIDER" in values and values["LIFEOS_PROVIDER"] not in ("claude", "gemini"):
         raise ValueError("Choose Claude or Gemini.")
+    for k in ("GEMINI_MODEL", "GEMINI_MODEL_DEEP"):
+        if k in values and not re.fullmatch(r"gemini-[a-z0-9][a-z0-9.\-]{2,60}", values[k]):
+            raise ValueError("A Gemini model name looks like gemini-3.8-flash.")
+    if "MOT_TOKEN_URL" in values and not values["MOT_TOKEN_URL"].startswith("https://"):
+        raise ValueError("The DVSA token address starts with https://.")
     if values:
         write_env(values)
     return sorted(values)

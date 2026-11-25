@@ -135,10 +135,13 @@ def answer(svc, command: str, now: datetime | None = None) -> str:
                 if p["kind"] in ("shopping", "care") and p["days_until"] <= 7 and p["status"] != "added"]
         return f"Probably running out soon: {_join(soon[:8])}." if soon else "Nothing looks like it's running out this week."
     if command == "bins":
-        from . import manual
+        from . import bins as bin_days, manual
+        said = bin_days.spoken(svc)
+        if said:
+            return said
         bins = [m for m in manual.entries(svc, include_private=False) if m["section"] == "Bins"]
         return " ".join(f"{m['title']}: {m['details']}" for m in bins[:2]) if bins else \
-            "I don't know the bin days yet. Add them to the home manual."
+            "I don't know the bin days yet. Add them in the app: Home, Bin days."
     if command == "chores":
         board = household.chores_board(svc)["kids"]
         if not board:
@@ -216,7 +219,12 @@ def ask(svc, agent, text: str, person: str = "") -> dict:
     quick = quick_answer(svc, text)
     if quick:
         return {"say": quick}
-    reply = agent.run(f"{VOICE_RULES}\n\nRequest from {person or 'the household'} by voice: {text}", source="voice")
+    try:
+        reply = agent.run(f"{VOICE_RULES}\n\nRequest from {person or 'the household'} by voice: {text}", source="voice")
+    except Exception as e:
+        from . import aierrors
+        log.warning("voice ask failed: %s", e)
+        return {"say": clean_for_speech("Sorry. " + aierrors.explain(e, agent.active_provider_name()), 300)}
     return {"say": clean_for_speech(reply, 400)}
 
 

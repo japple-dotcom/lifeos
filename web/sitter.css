@@ -1,0 +1,25 @@
+/* The babysitter sheet: easy to read on a phone, one or two clean pages when printed. */
+.sheet-page { max-width: 46rem; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+.sheet-bar { display: flex; gap: 0.8rem; justify-content: space-between; margin-bottom: 1rem; }
+.sheet-page h1 { font-size: 2rem; margin: 0.2rem 0; }
+.sheet-page h2 { font-size: 1.25rem; margin: 1.4rem 0 0.4rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.2rem; }
+.sheet-emergency { border: 3px solid var(--danger, #b3261e); border-radius: 12px; padding: 0.2rem 1rem 0.6rem; margin-top: 1rem; }
+.sheet-emergency h2 { border: 0; color: var(--danger, #b3261e); }
+.sheet-emergency li { font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0; }
+.sheet-table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+.sheet-table th, .sheet-table td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.sheet-table td:last-child { white-space: nowrap; font-weight: 700; }
+.sheet-kid { margin: 0.6rem 0; }
+.sheet-kid h3 { margin: 0; font-size: 1.1rem; }
+.sheet-page dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0; }
+.sheet-page dt { font-weight: 700; }
+.sheet-page dd { margin: 0; }
+.pre { white-space: pre-wrap; }
+@media print {
+  .no-print, #sheet-status { display: none !important; }
+  body { background: #fff; color: #000; font-size: 11.5pt; }
+  .sheet-page { max-width: none; padding: 0; }
+  .sheet-page h2 { break-after: avoid; border-color: #000; }
+  section { break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+}

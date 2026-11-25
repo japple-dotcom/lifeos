@@ -110,10 +110,30 @@
     $("#w-dinner").textContent = data.dinner || "Not planned yet";
     $("#w-dinner-tomorrow").textContent = data.dinner_tomorrow ? `Tomorrow: ${data.dinner_tomorrow}` : "";
 
+    const bins = data.bins;
+    const binsLine = $("#w-bins");
+    binsLine.hidden = !bins;
+    if (bins) {
+      const names = bins.bins.map((b) => (/^[A-Z]{2}/.test(b) ? b : b[0].toLowerCase() + b.slice(1)));
+      const what = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+      binsLine.textContent = bins.when === "tomorrow" ? `Bins out tonight: ${what}` : `Bins ${bins.when}: ${what}`;
+      binsLine.classList.toggle("urgent", bins.when === "tomorrow" || bins.when === "today");
+    }
+    const parcels = data.parcels || [];
+    $("#w-parcels-block").hidden = !parcels.length;
+    $("#w-parcels").replaceChildren(...parcels.map((p) => {
+      const li = el("li"); li.className = "plain";
+      li.append(el("span", "", p.name), el("span", "t", p.window || p.label));
+      return li;
+    }));
+
+    const stars = {};
+    (data.stars || []).forEach((s) => { stars[s.kid] = s; });
     $("#w-kids-block").hidden = !data.kids.length;
     $("#w-kids").replaceChildren(...data.kids.map((k) => {
       const li = el("li"); li.className = "plain";
-      li.append(el("span", "", `${k.kid}: ${k.done} done`), el("span", "t", k.owed ? money(k.owed) : ""));
+      const st = stars[k.kid];
+      li.append(el("span", "", `${k.kid}: ${k.done} done${st ? `, ${st.total} of ${st.target} stars` : ""}`), el("span", "t", k.owed ? money(k.owed) : ""));
       const goals = (k.goals || []).map((g) => {
         const row = el("li"); row.className = "plain goal";
         row.append(el("span", "", `${k.kid} saving for ${g.name}`), el("span", "t", `${g.pct}%`));

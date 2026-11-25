@@ -125,6 +125,47 @@
   </header>
 
   <p id="outbox-banner" class="outbox-banner" role="status" hidden></p>
+  <dialog id="carcost-dialog" class="sheet" aria-labelledby="carcost-title">
+    <div class="stack">
+      <h2 id="carcost-title">Running costs</h2>
+      <div id="carcost-body" class="stack" role="status" aria-live="polite"></div>
+      <details class="card add-detail" open>
+        <summary>Add a cost</summary>
+        <form id="carcost-form" class="stack" novalidate>
+          <div class="field"><label for="cc-kind">Kind of cost</label><select id="cc-kind"></select></div>
+          <div class="field"><label for="cc-amount">Cost (£)</label><input id="cc-amount" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          <div class="field"><label for="cc-date">Date of the cost</label><input id="cc-date" type="date"></div>
+          <div class="field"><label for="cc-miles">Mileage now (optional)</label><input id="cc-miles" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div class="field" id="cc-litres-field"><label for="cc-litres">Litres (optional)</label><input id="cc-litres" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          <div class="field"><label for="cc-note">Cost note (optional)</label><input id="cc-note" type="text" autocomplete="off"></div>
+          <button type="submit" class="btn btn-primary btn-block">Add cost</button>
+        </form>
+      </details>
+      <details class="card add-detail">
+        <summary>Servicing</summary>
+        <form id="carservice-form" class="stack" novalidate>
+          <div class="field"><label for="cs-miles">Service every (miles)</label><input id="cs-miles" type="number" min="1000" step="500" inputmode="numeric"></div>
+          <div class="field"><label for="cs-months">or every (months)</label><input id="cs-months" type="number" min="3" max="36" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="cs-last">Last service date (if not added as a cost)</label><input id="cs-last" type="date"></div>
+          <div class="field"><label for="cs-last-miles">Mileage at that service</label><input id="cs-last-miles" type="number" min="0" step="1" inputmode="numeric"></div>
+          <button type="submit" class="btn btn-secondary btn-block">Save servicing</button>
+        </form>
+      </details>
+      <details class="card add-detail">
+        <summary>MOT advisories</summary>
+        <div class="stack">
+          <ul class="list compact" id="carcost-adv"></ul>
+          <button type="button" class="btn btn-secondary btn-block" id="carcost-mot" hidden>Get the MOT history from DVSA</button>
+          <form id="caradv-form" class="stack" novalidate>
+            <div class="field"><label for="ca-text">Type one from the MOT certificate</label><input id="ca-text" type="text" autocomplete="off" placeholder="Nearside front tyre worn close to legal limit"></div>
+            <button type="submit" class="btn btn-secondary btn-block">Add advisory</button>
+          </form>
+        </div>
+      </details>
+      <button type="button" class="btn btn-secondary btn-block" data-close>Close</button>
+    </div>
+  </dialog>
+
   <main id="main" tabindex="-1">
     <!-- Sign in -->
     <section id="view-login" class="view" aria-labelledby="login-title" hidden>
@@ -150,6 +191,7 @@
       <h1 id="today-title">Today</h1>
       <p class="lead" id="today-date"></p>
       <div id="today-warnings"></div>
+      <p class="notice bins-note" id="bins-tonight" role="status" hidden></p>
       <section class="block card brief" aria-labelledby="brief-title" id="brief-block" hidden>
         <h2 id="brief-title">Latest briefing</h2>
         <p class="meta" id="brief-meta"></p>
@@ -190,6 +232,10 @@
       <section class="block" aria-labelledby="events-title">
         <h2 id="events-title">Calendar</h2>
         <ul class="list" id="events-list"></ul>
+      </section>
+      <section class="block" aria-labelledby="parcels-title" id="parcels-block" hidden>
+        <h2 id="parcels-title">Parcels</h2>
+        <ul class="list" id="parcels-list"></ul>
       </section>
       <section class="block" aria-labelledby="due-title" id="due-block">
         <h2 id="due-title">Due today</h2>
@@ -580,6 +626,94 @@
           <div id="seasonal-things" class="stack"></div>
         </details>
       </section>
+      <section class="block card stack" id="bins-block" aria-labelledby="bins-title" hidden>
+        <h2 id="bins-title">Bin days</h2>
+        <p class="lead" id="bins-next" role="status"></p>
+        <ul class="list compact" id="bins-upcoming" aria-label="Coming collections"></ul>
+        <details id="bins-setup">
+          <summary>Where the dates come from</summary>
+          <div class="stack">
+            <p class="hint" id="bins-source-hint"></p>
+            <div class="field" id="bins-cal-field" hidden><label for="bins-calendar">Home Assistant calendar</label><select id="bins-calendar"></select></div>
+            <fieldset class="stack">
+              <legend>Or type your bins (if there's no calendar)</legend>
+              <div id="bins-rota" class="stack"></div>
+              <button type="button" class="btn btn-secondary btn-small" id="bins-add-row">Add a bin</button>
+            </fieldset>
+            <div class="field"><label for="bins-remind">Remind the night before at</label><input id="bins-remind" type="time"></div>
+            <div class="check-row"><input type="checkbox" id="bins-speak"><label for="bins-speak">Say it on the speaker too</label></div>
+            <button type="button" class="btn btn-primary btn-block" id="bins-save">Save bin days</button>
+          </div>
+        </details>
+      </section>
+      <section class="block card stack" id="clean-block" aria-labelledby="clean-title" hidden>
+        <h2 id="clean-title">Cleaning rota</h2>
+        <p class="hint" id="clean-fair" role="status"></p>
+        <ul class="list" id="clean-list" aria-label="This week's cleaning jobs"></ul>
+        <p class="meta" id="clean-vacuum"></p>
+        <button type="button" class="btn btn-secondary btn-block" id="clean-todos">Put it in our to-do lists</button>
+        <details id="clean-setup">
+          <summary>Jobs and the robot vacuum</summary>
+          <div class="stack">
+            <fieldset class="stack"><legend>Jobs on the rota</legend><div id="clean-jobs" class="stack"></div></fieldset>
+            <div class="field" id="clean-vac-field"><label for="clean-vac">Robot vacuum</label><select id="clean-vac"></select></div>
+            <fieldset class="stack" id="clean-days"><legend>Days it runs</legend><div class="chip-row" id="clean-day-boxes"></div></fieldset>
+            <div class="field"><label for="clean-latest">If nobody goes out, run it by</label><input id="clean-latest" type="time"></div>
+            <div class="check-row"><input type="checkbox" id="clean-even"><label for="clean-even">Run it at that time even if someone's in</label></div>
+            <button type="button" class="btn btn-primary btn-block" id="clean-save">Save rota settings</button>
+          </div>
+        </details>
+      </section>
+      <section class="block card stack" id="study-block" aria-labelledby="study-title" hidden>
+        <h2 id="study-title">Reading, homework and stars</h2>
+        <p class="hint">The children log reading and tick homework on the kitchen tablet. Stars are for fun: pocket money still only comes from chores.</p>
+        <div id="study-stars" class="stack"></div>
+        <ul class="list compact" id="study-homework" aria-label="Homework"></ul>
+        <details class="card add-detail">
+          <summary>Add homework</summary>
+          <form id="homework-form" class="stack" novalidate>
+            <div class="field"><label for="hw-kid">Which child</label><select id="hw-kid"></select></div>
+            <div class="field"><label for="hw-title">What's the homework?</label><input id="hw-title" type="text" autocomplete="off" placeholder="For example: Spellings, words ending in -tion"></div>
+            <div class="field"><label for="hw-due">Hand in by</label><input id="hw-due" type="date"></div>
+            <button type="submit" class="btn btn-secondary btn-block">Save homework</button>
+          </form>
+        </details>
+      </section>
+      <section class="block card stack" id="date-block" aria-labelledby="date-title" hidden>
+        <h2 id="date-title">Date night</h2>
+        <p class="hint">Evenings you're both free (calendars only, nothing private shown), a message for the babysitter, and ideas nearby.</p>
+        <div class="field"><label for="date-pick">Evening</label><select id="date-pick"></select></div>
+        <div class="field"><label for="date-sitter">Babysitter</label><select id="date-sitter"></select></div>
+        <div class="field"><label for="date-message">Message to send</label><textarea id="date-message" rows="4"></textarea></div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" data-copy="date-message">Copy message</button>
+          <button type="button" class="btn btn-secondary" id="date-draft" hidden>Put it in Gmail drafts</button>
+          <button type="button" class="btn btn-primary" id="date-book">Put it in the calendar</button>
+        </div>
+        <h3>Ideas</h3>
+        <ul class="list compact" id="date-ideas"></ul>
+        <button type="button" class="linkish" id="date-more">Find fresh ideas</button>
+      </section>
+      <section class="block card stack" id="sitter-block" aria-labelledby="sitter-title" hidden>
+        <h2 id="sitter-title">Babysitter sheet</h2>
+        <p class="hint">One page for whoever's looking after the children: who to call, bedtimes, house rules and where things are. Print it or open it on their phone.</p>
+        <a class="btn btn-primary btn-block" href="sitter.html" target="_blank" rel="noopener">Open the sheet to print</a>
+        <details class="card add-detail">
+          <summary>Fill in the sheet</summary>
+          <form id="sitter-form" class="stack" novalidate>
+            <div class="field"><label for="st-address">Address (for an ambulance)</label><input id="st-address" type="text" autocomplete="street-address"></div>
+            <fieldset class="stack"><legend>Parents</legend><div id="st-parents" class="stack"></div></fieldset>
+            <fieldset class="stack"><legend>Other people to call</legend><div id="st-contacts" class="stack"></div></fieldset>
+            <fieldset class="stack"><legend>Children</legend><div id="st-kids" class="stack"></div></fieldset>
+            <div class="field"><label for="st-wifi">Wi-Fi name</label><input id="st-wifi" type="text" autocomplete="off"></div>
+            <div class="field"><label for="st-wifi-pw">Wi-Fi password (only if you want it printed)</label><input id="st-wifi-pw" type="text" autocomplete="off"></div>
+            <div class="field"><label for="st-rules">House rules</label><textarea id="st-rules" rows="3"></textarea></div>
+            <div class="field"><label for="st-notes">Anything else</label><textarea id="st-notes" rows="3"></textarea></div>
+            <div class="check-row"><input type="checkbox" id="st-manual"><label for="st-manual">Include the home manual (not private entries)</label></div>
+            <button type="submit" class="btn btn-primary btn-block">Save the sheet</button>
+          </form>
+        </details>
+      </section>
       <section class="block" aria-labelledby="manual-title">
         <h2 id="manual-title">Home manual</h2>
         <p class="hint">Where things are and how they work, for anyone in the house. Gemini can read it out ("Hey Google, what's on my Home manual list?") and it shows on the kitchen display, except private entries.</p>
@@ -687,6 +821,17 @@
         <button type="button" class="btn btn-primary btn-block" id="check-run">Check everything</button>
         <p id="check-summary" role="status" aria-live="polite"></p>
         <ul class="list compact" id="check-results"></ul>
+        <details id="livetest">
+          <summary>Live test with our real accounts</summary>
+          <div class="stack">
+            <p class="hint">Tries every Gmail, Tasks and Calendar feature on each connected account: adds a test to-do, a test calendar entry at 3am in a month's time and a test Gmail draft, checks each one, then deletes them. Nothing is ever sent.</p>
+            <div class="check-row"><input type="checkbox" id="live-ai"><label for="live-ai">Ask the assistant one tiny question too</label></div>
+            <button type="button" class="btn btn-primary btn-block" id="live-run">Run the live test</button>
+            <p id="live-summary" role="status" aria-live="polite"></p>
+            <ul class="list compact" id="live-results"></ul>
+            <button type="button" class="btn btn-secondary btn-block" id="live-copy" hidden>Copy the report</button>
+          </div>
+        </details>
       </section>
 
       <section class="block card stack" id="backups" aria-labelledby="backups-title">
@@ -731,10 +876,19 @@
             <p class="hint">Only fill in what you want to change. Keys are never shown again once saved. Life OS restarts to use them.</p>
             <div class="field"><label for="k-anthropic">Claude API key</label><p class="hint" id="k-anthropic-state"></p><input id="k-anthropic" type="password" autocomplete="off" aria-describedby="k-anthropic-state"></div>
             <div class="field"><label for="k-gemini">Gemini API key</label><p class="hint" id="k-gemini-state"></p><input id="k-gemini" type="password" autocomplete="off" aria-describedby="k-gemini-state"></div>
+            <div class="field"><label for="k-gemini-model">Gemini model</label><p class="hint" id="k-gemini-model-state"></p><input id="k-gemini-model" type="text" list="gemini-models" autocomplete="off" spellcheck="false" aria-describedby="k-gemini-model-state" placeholder="gemini-3.8-flash"><datalist id="gemini-models"></datalist></div>
             <div class="field"><label for="k-url">Address for phones (https)</label><p class="hint" id="k-url-state"></p><input id="k-url" type="url" inputmode="url" aria-describedby="k-url-state" placeholder="https://lifeos.tail1234.ts.net"></div>
             <div class="field"><label for="k-ha-url">Home Assistant address</label><input id="k-ha-url" type="url" placeholder="http://homeassistant.local:8123"></div>
             <div class="field"><label for="k-ha-token">Home Assistant token</label><p class="hint" id="k-ha-state"></p><input id="k-ha-token" type="password" autocomplete="off" aria-describedby="k-ha-state"></div>
             <div class="field"><label for="k-dvla">DVLA vehicle enquiry API key</label><p class="hint" id="k-dvla-state">For MOT and tax dates from your car's registration (free from the DVLA).</p><input id="k-dvla" type="password" autocomplete="off" aria-describedby="k-dvla-state"></div>
+            <details class="stack">
+              <summary>DVSA MOT history (optional)</summary>
+              <p class="hint" id="k-mot-state">For MOT advisories and the mileage at each MOT. Apply free at documentation.history.mot.api.gov.uk; DVSA emails all four.</p>
+              <div class="field"><label for="k-mot-id">Client ID</label><input id="k-mot-id" type="text" autocomplete="off" spellcheck="false"></div>
+              <div class="field"><label for="k-mot-secret">Client secret</label><input id="k-mot-secret" type="password" autocomplete="off"></div>
+              <div class="field"><label for="k-mot-key">API key</label><input id="k-mot-key" type="password" autocomplete="off"></div>
+              <div class="field"><label for="k-mot-url">Token URL</label><input id="k-mot-url" type="url" inputmode="url" autocomplete="off" placeholder="https://login.microsoftonline.com/.../oauth2/v2.0/token"></div>
+            </details>
             <div class="field"><label for="k-octopus">Octopus Energy tariff code</label><p class="hint" id="k-octopus-hint">Only if you're with Octopus on Agile or Go, for the cheapest times to run appliances. For example: E-1R-AGILE-24-10-01-C</p><input id="k-octopus" type="text" autocomplete="off" aria-describedby="k-octopus-hint"></div>
             <button type="submit" class="btn btn-primary btn-block">Save and restart</button>
           </form>
@@ -778,6 +932,19 @@
           <p class="hint">Then restart Home Assistant and expose the "Life OS ..." buttons to Google Home (Settings, Voice assistants, Expose).</p>
           <div class="field"><label for="voice-sentences-all">Or, for a speaker used only for Life OS (a Home Assistant Voice speaker, or a Nest Mini with a replacement board): everything you say goes to Life OS. Use this instead of file 2.</label><textarea id="voice-sentences-all" rows="6" readonly></textarea></div>
           <button type="button" class="btn btn-secondary btn-block" data-copy="voice-sentences-all">Copy</button>
+        </details>
+        <details id="voice-agent">
+          <summary>Talk to Life OS on a Home Assistant Voice speaker</summary>
+          <div class="stack">
+            <p class="hint">Life OS becomes a conversation agent in Home Assistant, so a Home Assistant Voice speaker (or a Nest Mini with a replacement board) talks to Life OS directly and keeps listening when Life OS asks a question back. Money, messages, unlocking and the alarm still wait for a tap on a phone.</p>
+            <ol class="steps-plain">
+              <li>Download the integration below and unzip it.</li>
+              <li>Copy the "lifeos" folder into Home Assistant's config/custom_components folder (the File editor or Samba add-on makes this easy), then restart Home Assistant.</li>
+              <li>In Home Assistant: Settings, Devices and services, Add integration, Life OS. Give it Life OS's address and the household key.</li>
+              <li>Settings, Voice assistants, your assistant: choose Life OS as the conversation agent.</li>
+            </ol>
+            <a class="btn btn-secondary btn-block" href="/api/voice/integration.zip" download="lifeos-home-assistant.zip">Download the Home Assistant integration</a>
+          </div>
         </details>
       </section>
 
@@ -853,5 +1020,6 @@
   </nav>
 
   <script src="app.js" defer></script>
+  <script src="more.js" defer></script>
 </body>
 </html>

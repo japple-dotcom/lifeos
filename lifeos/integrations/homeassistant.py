@@ -52,3 +52,11 @@ class HomeAssistant:
         r.raise_for_status()
         data = r.json()
         return data[0] if data else []
+
+    def calendar_events(self, entity_id: str, start: str, end: str) -> list[dict]:
+        """Events of a calendar entity (e.g. the bin collections from Waste Collection Schedule) between two ISO
+        times: [{summary, start: {date|dateTime}, end: {...}}, ...]."""
+        r = self._client.get(f"{self.url}/api/calendars/{entity_id}", headers=self._headers,
+                             params={"start": start, "end": end})
+        r.raise_for_status()
+        return r.json()

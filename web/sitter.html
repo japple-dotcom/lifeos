@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Babysitter sheet</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sitter.css">
+</head>
+<body class="sitter-page">
+  <main id="main" class="sheet-page">
+    <div class="no-print sheet-bar">
+      <a href="./#home" class="btn btn-secondary btn-small">Back to Life OS</a>
+      <button type="button" class="btn btn-primary btn-small" id="print-sheet">Print</button>
+    </div>
+    <p id="sheet-status" role="status" aria-live="polite">Loading the sheet...</p>
+    <article id="sheet" hidden>
+      <h1>While we're out</h1>
+      <p class="lead" id="sheet-address"></p>
+      <section aria-labelledby="em-title" class="sheet-emergency">
+        <h2 id="em-title">In an emergency</h2>
+        <ul id="sheet-emergency"></ul>
+      </section>
+      <section aria-labelledby="call-title">
+        <h2 id="call-title">Who to call</h2>
+        <table class="sheet-table"><thead><tr><th scope="col">Name</th><th scope="col">Who</th><th scope="col">Phone</th></tr></thead><tbody id="sheet-people"></tbody></table>
+      </section>
+      <section aria-labelledby="kids-title-s" id="sheet-kids-block">
+        <h2 id="kids-title-s">The children</h2>
+        <div id="sheet-kids"></div>
+      </section>
+      <section aria-labelledby="rules-title" id="sheet-rules-block">
+        <h2 id="rules-title">House rules</h2>
+        <p id="sheet-rules" class="pre"></p>
+      </section>
+      <section aria-labelledby="where-title" id="sheet-where-block">
+        <h2 id="where-title">Where things are</h2>
+        <dl id="sheet-where"></dl>
+      </section>
+      <section aria-labelledby="wifi-title" id="sheet-wifi-block">
+        <h2 id="wifi-title">Wi-Fi</h2>
+        <p id="sheet-wifi"></p>
+      </section>
+      <section aria-labelledby="notes-title" id="sheet-notes-block">
+        <h2 id="notes-title">Anything else</h2>
+        <p id="sheet-notes" class="pre"></p>
+      </section>
+    </article>
+  </main>
+  <script src="sitter.js"></script>
+</body>
+</html>

@@ -121,6 +121,14 @@ class Google:
     def delete_task(self, list_name: str, task_id: str) -> None:
         self.tasks_api.tasks().delete(tasklist=self._list_id(list_name), task=task_id).execute()
 
+    def delete_list(self, list_name: str) -> None:
+        """Only for a list Life OS made for itself (the live test's own list); never the person's lists."""
+        if list_name == DEFAULT_LIST:
+            raise ValueError("Life OS never deletes the main list.")
+        list_id = self._list_id(list_name)
+        self.tasks_api.tasklists().delete(tasklist=list_id).execute()
+        self._list_ids.pop(list_name.lower(), None)
+
     def move_task_due(self, list_name: str, task_id: str, due: str) -> dict:
         return self.tasks_api.tasks().patch(
             tasklist=self._list_id(list_name), task=task_id, body={"due": f"{due}T00:00:00.000Z"}

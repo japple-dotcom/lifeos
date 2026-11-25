@@ -686,3 +686,80 @@ def test_first_run_setup_page(tmp_path, browser, monkeypatch):
     assert errors == []
     ctx.close()
     server.should_exit = True
+
+
+def test_v018_parcels_bins_rota_study_date_sitter_cars_livetest(base_url, browser):
+    """v0.18 screens on a phone: parcels and bins on Today, the Home blocks, car running costs, the live test,
+    and the printable babysitter sheet."""
+    url, svc = base_url
+    ctx, page = _phone(browser)
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.on("dialog", lambda d: d.accept())
+    _sign_in(page, url)
+    page.locator("#parcels-list li").first.wait_for()
+    assert "Lego treehouse" in page.locator("#parcels-list").inner_text()
+    page.get_by_role("button", name="Got it: Lego treehouse").click()
+    page.locator("#parcels-list").filter(has_not_text="Lego treehouse").wait_for()
+    # Home: bins, cleaning rota (tick one), homework, date night, sitter
+    page.goto(f"{url}/app/#home")
+    page.locator("#clean-list li").first.wait_for()
+    assert page.locator("#bins-next").inner_text()
+    first = page.locator("#clean-list li").first.get_by_role("button", name=re.compile("^Done: "))
+    job = first.get_attribute("aria-label").removeprefix("Done: ")
+    first.click()
+    page.get_by_role("button", name=f"Undo: {job}").wait_for()
+    page.get_by_text("Add homework").click()
+    page.get_by_label("What's the homework?", exact=True).fill("Read chapter 3")
+    page.get_by_role("button", name="Save homework").click()
+    page.locator("#study-homework").filter(has_text="Read chapter 3").wait_for()
+    page.wait_for_function("document.querySelector('#date-message').value.includes('are you free to babysit')")
+    page.get_by_role("button", name="Put it in the calendar").click()
+    page.locator("#toast").filter(has_text="Date night is in the calendar").wait_for()
+    # Cars: running costs
+    page.goto(f"{url}/app/#tasks?sec=renewals")
+    page.get_by_role("button", name="Running costs: The Golf").click()
+    page.locator("#carcost-body .lead").filter(has_text="Last 12 months").wait_for()
+    page.get_by_label("Kind of cost").select_option("parking")
+    page.get_by_label("Cost (£)").fill("3.20")
+    page.get_by_role("button", name="Add cost").click()
+    page.locator("#toast").filter(has_text="Cost added").wait_for()
+    page.get_by_role("button", name="Close").last.click()
+    # Settings: the live test sends nothing
+    page.goto(f"{url}/app/#settings?sec=check")
+    page.locator("#livetest summary").click()
+    page.get_by_role("button", name="Run the live test").click()
+    page.locator("#live-summary").filter(has_text="Nothing was sent").wait_for()
+    # the babysitter sheet
+    page.goto(f"{url}/app/sitter.html")
+    page.get_by_role("heading", name="While we're out").wait_for()
+    assert "999" in page.locator("#sheet-emergency").inner_text()
+    assert not errors, errors
+    ctx.close()
+
+
+def test_v018_kids_tablet_reading_homework_stars(base_url, browser):
+    url, svc = base_url
+    ctx = browser.new_context(viewport={"width": 1280, "height": 800}, locale="en-GB")
+    page = ctx.new_page()
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.goto(f"{url}/app/kids.html")
+    page.get_by_label("Household key (a grown-up types this once)").fill("demo")
+    page.get_by_role("button", name="Start").click()
+    page.get_by_role("button", name="Reading", exact=True).click()
+    page.get_by_role("button", name="Ava").click()
+    page.get_by_role("button", name="I read for 20 minutes").click()
+    page.locator("#kids-cheer").filter(has_text="20 minutes of reading").wait_for()
+    page.get_by_role("button", name="Undo 20 minutes reading").wait_for()
+    page.get_by_role("button", name="Homework", exact=True).click()
+    page.get_by_role("button", name=re.compile("^I've done: Times tables")).click()
+    page.get_by_role("button", name=re.compile("^Undo: Times tables")).wait_for()
+    page.get_by_role("button", name="Stars", exact=True).click()
+    page.get_by_role("heading", name=re.compile("^Ava: \\d+ of 15 stars")).wait_for()
+    assert "null" not in page.locator("#kid-panel").inner_text()
+    # still only a tablet: it can't add homework or reach adult screens
+    assert page.evaluate("fetch('/api/kids/homework', {method:'POST', headers:{'Content-Type':'application/json'}, "
+                         "body: JSON.stringify({kid:'Ava', title:'x'})}).then(r => r.status)") == 401
+    assert not errors, errors
+    ctx.close()

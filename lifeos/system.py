@@ -20,6 +20,11 @@ class KeysBody(BaseModel):
     ha_token: str = ""
     dvla_api_key: str = ""
     octopus_tariff: str = ""
+    gemini_model: str = ""
+    mot_client_id: str = ""
+    mot_client_secret: str = ""
+    mot_api_key: str = ""
+    mot_token_url: str = ""
 
 
 class OnBody(BaseModel):
@@ -58,8 +63,9 @@ def add_routes(app: FastAPI, svc, current_person) -> None:
                 "managed": ctl is not None, "demo": svc.settings.demo,
                 "keys": {k: setup_core.is_set(setup_core.read_env().get(e)) for k, e in
                          (("anthropic", "ANTHROPIC_API_KEY"), ("gemini", "GEMINI_API_KEY"), ("ha", "HA_TOKEN"),
-                          ("dvla", "DVLA_API_KEY"))},
-                "public_url": svc.settings.public_url}
+                          ("dvla", "DVLA_API_KEY"), ("mot", "MOT_API_KEY"))},
+                "public_url": svc.settings.public_url, "gemini_model": svc.settings.gemini_model,
+                "gemini_models": setup_core.GEMINI_MODELS}
 
     @app.post("/api/system/update/check")
     def check(person: str = Depends(current_person)):
@@ -113,7 +119,10 @@ def add_routes(app: FastAPI, svc, current_person) -> None:
             changed = setup_core.update_env({"ANTHROPIC_API_KEY": body.anthropic_api_key, "GEMINI_API_KEY": body.gemini_api_key,
                                              "LIFEOS_PUBLIC_URL": body.public_url, "HA_URL": body.ha_url,
                                              "HA_TOKEN": body.ha_token, "DVLA_API_KEY": body.dvla_api_key,
-                                             "OCTOPUS_TARIFF": body.octopus_tariff})
+                                             "OCTOPUS_TARIFF": body.octopus_tariff, "GEMINI_MODEL": body.gemini_model,
+                                             "GEMINI_MODEL_DEEP": body.gemini_model, "MOT_CLIENT_ID": body.mot_client_id,
+                                             "MOT_CLIENT_SECRET": body.mot_client_secret, "MOT_API_KEY": body.mot_api_key,
+                                             "MOT_TOKEN_URL": body.mot_token_url})
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
         if not changed:

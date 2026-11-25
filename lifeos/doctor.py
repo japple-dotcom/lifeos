@@ -99,8 +99,8 @@ def check_ai(agent, skip: bool) -> list[tuple[str, str]]:
         reply = agent.provider.chat("Reply with exactly: OK", [], "Say OK", lambda n, a: ("", True))
         return [(OK, f"{name.title()} answered ({reply.strip()[:20]!r})")]
     except Exception as e:
-        hint = " Check the API key and that billing is set up." if "401" in str(e) or "auth" in str(e).lower() else ""
-        return [(FAIL, f"{name.title()} failed: {e}.{hint}")]
+        from . import aierrors
+        return [(FAIL, f"{name.title()} didn't answer: {aierrors.explain(e, name)}")]
 
 
 def check_notifications(svc) -> list[tuple[str, str]]:

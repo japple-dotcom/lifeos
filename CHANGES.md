@@ -1,5 +1,19 @@
 # What's new
 
+## 0.18.0
+Talk to Life OS on a Home Assistant Voice speaker: it's now a Home Assistant conversation agent (download the small
+integration from Settings > Voice and speakers) and keeps listening when it asks you a question back. Parcels from
+dispatch and "out for delivery" emails on Today and the kitchen display, with a nudge when one's due and nobody's
+in. Bin days from the council (Home Assistant's Waste Collection Schedule) or your own rota, with a reminder and
+an announcement the night before. A printable babysitter sheet. Date night: evenings you're both free, a message
+for the babysitter, ideas nearby. On the kids' tablet: a reading log, homework to tick and a weekly star chart.
+A fair cleaning rota for the two of you, with the robot vacuum run while the house is empty. Car running costs:
+fuel, cost per mile, servicing by mileage, and MOT advisories (typed, or from DVSA's MOT history API). A live test
+of every Gmail, Tasks and Calendar feature against your real accounts that sends nothing.
+Fixes: the assistant's errors in plain English ("Your Claude account has no credit left..."); "Show household key"
+on the menu bar icon; signing in at http://localhost on the Mac now sticks in Safari; choose the Gemini model in
+Settings (gemini-3.8-flash is the new default).
+
 ## 0.17.2
 Phone notifications now switch on even when the notification key brought across from an older install can't be
 read: Life OS keeps the old file beside it and makes a new key, so each phone turns notifications on once more. If

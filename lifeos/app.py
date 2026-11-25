@@ -24,8 +24,8 @@ from pydantic import BaseModel
 from . import approvals, oauth, sessions
 from .accounts import GoogleAccounts
 from .agent import Agent
-from . import (activity, adminhour, agenda, away, bills, bridge, cars, childcare, doctor, energy, files,
-               haggle, household, kidsmode, leaving, manual, money, offsite, party, profiles, recipes,
+from . import (activity, adminhour, agenda, away, bills, bins, bridge, cars, childcare, deliveries, doctor, energy,
+               files, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles, recipes,
                scheduling, schoolrun, seasonal, shop, solver, todos, trades, trips, voice)
 from . import checklist as checklist_mod
 from .config import Settings, load_settings, setup_problems
@@ -38,6 +38,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 log = logging.getLogger("lifeos.app")
 logging.getLogger("apscheduler").setLevel(logging.WARNING)  # keep the log readable
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"  # = paths.web_dir()
+LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1", "[::1]")
 DISPLAY = "display"  # the read-only kitchen wall display: can view /api/wall and nothing else
 KIDS = "kids"  # the kitchen tablet in kids' mode: the wall display, plus ticking chores (never paying, never anything else)
 
@@ -344,7 +345,11 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
             raise HTTPException(status_code=400, detail="Unknown person.")
         resp = JSONResponse({"person": body.person, "name": name_of(body.person)})
         resp.set_cookie(sessions.COOKIE, sessions.make(s.signing_secret, body.person), max_age=sessions.MAX_AGE,
-                        httponly=True, samesite="lax", secure=s.public_url.startswith("https://"))
+                        httponly=True, samesite="lax",
+                        # https pages get a secure cookie; this computer's own http://localhost page must not (Safari
+                        # drops secure cookies there, so signing in on the Mac would never stick)
+                        secure=request.url.scheme == "https" or (s.public_url.startswith("https://") and
+                                                                 (request.url.hostname or "") not in LOCAL_HOSTS))
         return resp
 
     @app.post("/api/logout")
@@ -419,7 +424,16 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                 "approvals": svc.store.list_pending(), "chores": svc.store.recent_chores(5), "warnings": warnings,
                 "brief": svc.store.latest_brief(), "renewals": household.upcoming_renewals(svc, 60),
                 "dinner": household.dinner_on(svc), "waiting": waiting_on(), "next_up": next_up,
-                "rate_dinner": household.dinner_to_rate(svc), "childcare": soon_childcare()}
+                "rate_dinner": household.dinner_to_rate(svc), "childcare": soon_childcare(),
+                "parcels": _safe_call(lambda: deliveries.current(svc), {}),
+                "bins_tomorrow": _safe_call(lambda: bins.tomorrow(svc), [])}
+
+    def _safe_call(fn, default):
+        try:
+            return fn()
+        except Exception as e:  # one feature failing never stops Today or the display loading
+            log.warning("today/display: %s", e)
+            return default
 
     # ---------- smart to-dos and projects ----------
     def need_google():
@@ -834,7 +848,11 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                 "renewals": household.upcoming_renewals(svc, 30),
                 "manual": manual.for_display(svc),
                 "brief": brief["text"] if brief and brief["name"] == "morning_brief" else "",
-                "pending": len(svc.store.list_pending())}
+                "pending": len(svc.store.list_pending()),
+                "parcels": _safe_call(lambda: deliveries.wall(svc), []),
+                "bins": _safe_call(lambda: bins.overview(svc)["next"], None),
+                "stars": _safe_call(lambda: [{"kid": k["kid"], "total": k["total"], "target": k["target"]}
+                                             for k in kidstuff.stars(svc)["kids"]], [])}
 
     # ---------- renewals ----------
     @app.get("/api/renewals")
@@ -934,7 +952,8 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                               source=f"app:{person}", history=history) or "Done."
         except Exception as e:
             log.exception("ask failed")
-            raise HTTPException(502, f"The assistant couldn't answer just now ({type(e).__name__}). Try again.") from e
+            from . import aierrors
+            raise HTTPException(502, aierrors.explain(e, agent.active_provider_name())) from e
         svc.store.add_turn(person, "user", f"[Asked by {name_of(person)} (person id: {person})] {text}")
         svc.store.add_turn(person, "assistant", reply)
         return {"reply": reply, "ai": agent.active_provider_name()}
@@ -1736,6 +1755,13 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
     def events(limit: int = 50):
         return svc.store.recent_events(limit)
 
+    # ---------- v0.18: deliveries, bins, babysitter, date night, kids' extras, cleaning, car costs, live test ----------
+    from types import SimpleNamespace
+
+    from . import routes18
+    routes18.add_routes(app, svc, agent, SimpleNamespace(
+        current_person=current_person, current_kids=current_kids, current_viewer=current_viewer,
+        require_key=require_key, name_of=name_of, need_google=need_google))
     return app
 
 

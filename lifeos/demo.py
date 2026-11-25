@@ -56,6 +56,9 @@ class DemoGoogle:
         self.deleted += [{**t, "deleted": True} for t in self.tasks if t["id"] == task_id]
         self.tasks = [t for t in self.tasks if t["id"] != task_id]
 
+    def delete_list(self, list_name):
+        self.tasks = [t for t in self.tasks if t["list"] != list_name]
+
     def update_task(self, list_name, task_id, title=None, notes=None, due=None):
         for t in self.tasks:
             if t["id"] == task_id:
@@ -161,6 +164,8 @@ class DemoHA:
             "sensor.dishwasher_status": ("Dishwasher", "finished"), "sensor.vacuum_filter_left": ("Vacuum filter left", "7"),
             "switch.dishwasher_plug": ("Dishwasher plug", "off"), "switch.washing_machine_plug": ("Washing machine plug", "off"),
             "media_player.kitchen_speaker": ("Kitchen speaker", "idle"), "media_player.living_room_speaker": ("Living room speaker", "off"),
+            "person.joe": ("Joe", "home"), "person.sue": ("Sue", "not_home"),
+            "calendar.bin_collections": ("Bin collections", "off"),
         }
         self.spoken: list[str] = []  # what Life OS said on the speakers (shown in the demo's log)
 
@@ -181,6 +186,17 @@ class DemoHA:
     def summary(self):
         return [{"entity_id": s["entity_id"], "name": s["attributes"]["friendly_name"], "state": s["state"]}
                 for s in self.states()]
+
+    def calendar_events(self, entity_id, start, end):
+        """Bins every Thursday: general waste and recycling on alternate weeks, garden waste with recycling."""
+        a, b = date.fromisoformat(start[:10]), date.fromisoformat(end[:10])
+        out, day = [], a + timedelta(days=(3 - a.weekday()) % 7)
+        while day < b:
+            names = ["Recycling (green bin)", "Garden waste (brown bin)"] if day.isocalendar()[1] % 2 else ["General waste (black bin)"]
+            out += [{"summary": n, "start": {"date": day.isoformat()}, "end": {"date": (day + timedelta(days=1)).isoformat()}}
+                    for n in names]
+            day += timedelta(days=7)
+        return out
 
     target = 20.5  # living room heating target, °C
 
@@ -480,6 +496,47 @@ def build():
                                 ("Bins", "Bin day", "Thursday morning. Green (recycling) and black alternate; brown every other Monday."),
                                 ("Internet", "Wi-Fi", "Network: LifeHouse. Password: maple-orbit-42 (guest network: LifeGuest)")):
         manual.save(svc, title, details, sec)
+
+    # v0.18: parcels, the babysitter sheet, reading and homework, car costs and MOT advisories, a babysitter, the vacuum
+    from lifeos import carcosts, cleaning, deliveries, kidstuff, sitter
+    deliveries.save(svc, {"is_delivery": True, "status": "out_for_delivery", "retailer": "Amazon", "item": "Lego treehouse",
+                          "carrier": "Amazon", "expected_date": d.isoformat(), "window": "10:15 to 11:15",
+                          "tracking_url": "https://www.amazon.co.uk/gp/your-account/order-history"}, "demo-1", "me")
+    deliveries.save(svc, {"is_delivery": True, "status": "dispatched", "retailer": "John Lewis", "item": "School shoes (Leo)",
+                          "carrier": "DPD", "expected_date": (d + timedelta(days=2)).isoformat()}, "demo-2", "wife")
+    deliveries.save(svc, {"is_delivery": True, "status": "ready_to_collect", "retailer": "Boots", "item": "Prescription bag",
+                          "carrier": "InPost", "collect_from": "InPost locker, Co-op car park"}, "demo-3", "wife")
+    sitter.save(svc, {"address": "12 Example Road, Leeds LS6 1AA",
+                      "parents": [{"name": "Joe", "phone": "07700 900001"}, {"name": "Sue", "phone": "07700 900002"}],
+                      "contacts": [{"name": "Grandma Pat", "role": "Nearby, has a key", "phone": "07700 900123"}],
+                      "kids": [{"name": "Ava", "bedtime": "19:30", "notes": "Story and a glass of water. Night light on."},
+                               {"name": "Leo", "bedtime": "19:00", "notes": "Needs Bunny. Calpol is in the high cupboard if he's poorly; check with us first."}],
+                      "wifi_name": "LifeGuest", "wifi_password": "", "rules": "No screens after 7pm. Help yourself to anything in the fridge.",
+                      "notes": "The back door sticks: lift the handle while you turn the key.", "include_manual": True})
+    store.save_contact(None, name="Megan Clarke", trade="babysitter", phone="07700 900777", email="megan.sitter@example.com")
+    for kid, mins, book, back in (("Ava", 20, "The Twits", 0), ("Ava", 15, "The Twits", 1), ("Leo", 10, "Oi Frog!", 0),
+                                  ("Ava", 25, "The Twits", 3)):
+        if (d - timedelta(days=back)) >= kidstuff.week_start(d):
+            kidstuff.log_reading(svc, kid, mins, book, "me", (d - timedelta(days=back)).isoformat())
+    kidstuff.add_homework(svc, "Ava", "Spellings: words ending in -tion", (d + timedelta(days=(4 - d.weekday()) % 7)).isoformat(), "wife")
+    kidstuff.add_homework(svc, "Ava", "Times tables: 7s", (d + timedelta(days=3)).isoformat(), "me")
+    kidstuff.add_homework(svc, "Leo", "Read with an adult and sign the diary", d.isoformat(), "wife")
+    for kind, amt, back, miles, litres in (("fuel", 68.40, 6, 48210, 47.5), ("fuel", 61.20, 27, 47805, 42.0),
+                                           ("service", 189.00, 140, 45900, None), ("parking", 4.50, 3, None, None),
+                                           ("insurance", 412.00, 200, None, None), ("tyres", 96.00, 80, 46850, None)):
+        carcosts.add_cost(svc, "KX19ABC", kind, amt, (d - timedelta(days=back)).isoformat(), miles, litres)
+    golf = store.get("car", "KX19ABC")
+    golf["mot_tests"] = [{"date": (d - timedelta(days=330)).isoformat(), "result": "Passed", "miles": 44120,
+                          "advisories": ["Nearside front tyre worn close to legal limit", "Brake pipe slightly corroded"],
+                          "failures": []},
+                         {"date": (d - timedelta(days=695)).isoformat(), "result": "Passed", "miles": 36400,
+                          "advisories": [], "failures": []}]
+    store.put("car", "KX19ABC", {k: v for k, v in golf.items() if k not in ("id", "at", "updated_at")})
+    cleaning.save_settings(svc, vacuum={"entity": "vacuum.robot", "days": ["mon", "wed", "fri"], "latest": "16:00"})
+    store.put("clean_done", "demo-c1", {"job": "bathroom", "by": "wife", "date": (d - timedelta(days=8)).isoformat(), "points": 3},
+              at=(d - timedelta(days=8)).isoformat())
+    store.put("clean_done", "demo-c2", {"job": "beds", "by": "me", "date": (d - timedelta(days=9)).isoformat(), "points": 3},
+              at=(d - timedelta(days=9)).isoformat())
 
     # Watch for the (simulated) electrician's reply, as the real scheduler does every 30 minutes.
     import threading
