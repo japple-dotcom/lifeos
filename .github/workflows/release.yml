@@ -40,7 +40,7 @@ jobs:
           - { os: macos-15-intel, key: mac-x64, out: LifeOS-mac-intel.dmg }
           - { os: windows-latest, key: windows-x64, out: LifeOS-windows.exe }
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.key == 'mac-x64' }}
+    continue-on-error: ${{ startsWith(matrix.key, 'mac-') }}   # GitHub's Mac machines are sometimes too busy; release the rest
     defaults:
       run:
         shell: bash
