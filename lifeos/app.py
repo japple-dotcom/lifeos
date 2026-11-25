@@ -51,14 +51,16 @@ def build_services(settings: Settings) -> Services:
 
     store = Store(settings.db_path)
     ntfy = Notifier(settings.ntfy_url, settings.ntfy_topic, settings.ntfy_token) if settings.ntfy_topic else None
-    pusher = None
+    pusher, push_problem = None, ""
     try:
         key_file = str(Path(settings.google_token_file).parent / "vapid_private.pem")
         pusher = WebPusher(store, key_file, settings.push_contact)
     except Exception as e:
-        log.warning("In-app notifications unavailable: %s", e)
+        push_problem = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+        log.warning("In-app notifications unavailable: %s", push_problem, exc_info=True)
     channels = FanOut(pusher, ntfy)
-    svc = Services(settings=settings, store=store, ha=ha, google=GoogleAccounts(settings), pusher=pusher)
+    svc = Services(settings=settings, store=store, ha=ha, google=GoogleAccounts(settings), pusher=pusher,
+                   push_problem=push_problem)
     svc.notifier = household.QuietHours(channels, svc) if channels else None
     return svc
 
@@ -886,10 +888,15 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
         return {"ok": True, "paid": amount}
 
     # ---------- in-app notifications ----------
+    def push_unavailable() -> str:
+        why = f" ({svc.push_problem})" if svc.push_problem else ""
+        return (f"Notifications couldn't start on the Life OS computer{why}. "
+                "Restart Life OS; if this stays, Settings > Check everything shows what to do.")
+
     @app.get("/api/push/key")
     def api_push_key(person: str = Depends(current_person)):
         if not svc.pusher:
-            raise HTTPException(503, "Notifications aren't available on the server.")
+            raise HTTPException(503, push_unavailable())
         return {"key": svc.pusher.public_key}
 
     @app.post("/api/push/subscribe")
@@ -907,7 +914,7 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
     @app.post("/api/push/test")
     def api_push_test(person: str = Depends(current_person)):
         if not svc.pusher:
-            raise HTTPException(503, "Notifications aren't available on the server.")
+            raise HTTPException(503, push_unavailable())
         n = svc.pusher.push(f"Notifications are working for {name_of(person)}.", title="Life OS", person=person)
         if not n:
             raise HTTPException(400, "This phone isn't signed up for notifications yet.")

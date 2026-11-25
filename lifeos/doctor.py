@@ -113,7 +113,8 @@ def check_notifications(svc) -> list[tuple[str, str]]:
         else:
             out.append((WARN, "No phone has turned on notifications yet (app: Settings > Notifications)."))
     else:
-        out.append((FAIL, "In-app notifications unavailable (is pywebpush installed?)."))
+        why = getattr(svc, "push_problem", "") or "is pywebpush installed?"
+        out.append((FAIL, f"In-app notifications couldn't start ({why}). Try Settings > Updates and this computer > Restart Life OS."))
     if svc.settings.ntfy_topic:
         out.append((OK, f"ntfy also configured (topic {svc.settings.ntfy_topic[:6]}...)"))
     return out

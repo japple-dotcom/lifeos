@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import time
 from pathlib import Path
 
 log = logging.getLogger("lifeos.webpush")
@@ -18,11 +19,22 @@ def _b64url(data: bytes) -> str:
 
 
 def load_or_create_keys(path: str):
+    """The notification key, made on first start. A key file that can't be used (for example one brought across
+    from an older install) is kept beside it as <name>.unreadable-<time> and a new key is made; phones then turn
+    notifications on again once (none could receive them with the old key anyway)."""
     from py_vapid import Vapid
 
     p = Path(path)
     if p.exists():
-        return Vapid.from_file(str(p))
+        try:
+            v = Vapid.from_file(str(p))
+            public_key_b64(v)  # proves the key is complete and usable
+            return v
+        except Exception as e:
+            aside = p.with_name(f"{p.name}.unreadable-{time.strftime('%Y%m%d-%H%M%S')}")
+            log.warning("The notification key %s couldn't be used (%s); kept it as %s and made a new one",
+                        p, e or type(e).__name__, aside.name)
+            p.replace(aside)
     p.parent.mkdir(parents=True, exist_ok=True)
     v = Vapid()
     v.generate_keys()

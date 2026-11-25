@@ -1,6 +1,6 @@
 /* Service worker: makes Life OS installable and lets the app open instantly, even on a weak signal.
    Only the app's own files are cached; household data (/api) is never stored on the phone. */
-const CACHE = "lifeos-shell-v20";
+const CACHE = "lifeos-shell-v21";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "wall.html", "wall.css", "wall.js", "kids.html", "kids.js",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"];
 

@@ -1775,3 +1775,42 @@ def test_leaving_home_check_offers_only_safe_fixes(svc):
     assert len(svc.ha.calls) == 4
     left = client.get("/api/home/leaving").json()
     assert [i["entity_id"] for i in left["issues"]] == ["binary_sensor.back_door"] and not left["ok"]
+
+
+# ---------- v0.17.2: notifications start even with an unusable key file ----------
+def test_unusable_notification_key_is_kept_aside_and_replaced(svc, tmp_path):
+    from lifeos.integrations.webpush import WebPusher
+    for bad in (b"", b"not a key at all", b"-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----\n"):
+        folder = tmp_path / f"case{len(bad)}"
+        folder.mkdir()
+        key = folder / "vapid_private.pem"
+        key.write_bytes(bad)
+        pusher = WebPusher(svc.store, str(key))
+        assert len(pusher.public_key) == 87
+        aside = list(folder.glob("vapid_private.pem.unreadable-*"))
+        assert len(aside) == 1 and aside[0].read_bytes() == bad  # the old file is kept, never deleted
+        assert WebPusher(svc.store, str(key)).public_key == pusher.public_key  # the new key is reused after
+
+
+def test_notification_problem_is_explained(svc):
+    from lifeos import doctor
+    svc.pusher, svc.push_problem = None, "ImportError: No module named 'py_vapid'"
+    client, _ = _app_client(svc)
+    client.post("/api/login", json={"key": "test-key", "person": "wife"})
+    r = client.get("/api/push/key")
+    assert r.status_code == 503 and "py_vapid" in r.json()["detail"] and "Restart Life OS" in r.json()["detail"]
+    rows = doctor.check_notifications(svc)
+    assert rows[0][0] == doctor.FAIL and "py_vapid" in rows[0][1]
+
+
+def test_build_services_records_why_notifications_failed(tmp_path, monkeypatch):
+    from lifeos import app as app_module
+    from lifeos.config import Settings
+    import lifeos.integrations.webpush as wp
+
+    def broken(*a, **k):
+        raise RuntimeError("key folder is read-only")
+    monkeypatch.setattr(wp, "WebPusher", broken)
+    s = Settings(db_path=str(tmp_path / "x.db"), google_token_file=str(tmp_path / "secrets" / "google_token.json"))
+    svc = app_module.build_services(s)
+    assert svc.pusher is None and svc.push_problem == "RuntimeError: key folder is read-only"

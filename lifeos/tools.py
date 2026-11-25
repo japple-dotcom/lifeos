@@ -22,6 +22,7 @@ class Services:
     google: Any = None
     notifier: Any = None
     pusher: Any = None  # the in-app (Web Push) channel, also included in notifier
+    push_problem: str = ""  # why the in-app channel couldn't start, if it couldn't (shown in Check everything)
     agent: Any = None   # the household agent, for features that need a small AI decision (to-do sorting)
 
 

@@ -1,5 +1,10 @@
 # What's new
 
+## 0.17.2
+Phone notifications now switch on even when the notification key brought across from an older install can't be
+read: Life OS keeps the old file beside it and makes a new key, so each phone turns notifications on once more. If
+notifications still can't start, the message on the phone and Settings > Check everything now say why.
+
 ## 0.17.1
 Life OS now finds its own updates on GitHub (japple-dotcom/lifeos): Settings > Updates offers each new version, and
 the overnight install works without downloading files.

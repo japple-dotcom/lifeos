@@ -96,6 +96,14 @@ jobs:
           curl -fsS http://127.0.0.1:8841/app/ | grep -qi "<!doctype html" || ok=0
           curl -fsS -o /dev/null http://127.0.0.1:8841/app/app.js || ok=0
           curl -fsS -o /dev/null http://127.0.0.1:8841/app/wall.html || ok=0
+          # Phone notifications must start inside the app (their packages are only imported when needed)
+          curl -fsS -c "$RUNNER_TEMP/cj" -H 'Content-Type: application/json' \
+            -d '{"key":"ci-household-key-123","person":"me"}' http://127.0.0.1:8841/api/login > /dev/null || ok=0
+          if curl -fsS -b "$RUNNER_TEMP/cj" http://127.0.0.1:8841/api/push/key | grep -q '"key"'; then
+            echo "notifications ready"
+          else
+            echo "::error::notifications didn't start"; curl -sS -b "$RUNNER_TEMP/cj" http://127.0.0.1:8841/api/push/key; ok=0
+          fi
           kill $PID || true
           if [ "$ok" = 1 ]; then echo "main app served"; else echo "::error::main app page missing"; cat "$RUNNER_TEMP/run2.log"; exit 1; fi
       - name: Package
