@@ -1,8 +1,9 @@
 # Builds the Life OS app for Mac, Windows, Linux and the Raspberry Pi, checks each one starts, and publishes them
 # with the update file and the update feed (latest.json) as a GitHub release.
 #
-# To release: bump __version__ in lifeos/__init__.py, add a section to CHANGES.md, then push a tag:
-#   git tag v0.15.1 && git push origin v0.15.1
+# To release: bump __version__ in lifeos/__init__.py, add a section to CHANGES.md and push to main, then either
+#   - on GitHub: Actions > Release > Run workflow (the release is named after __version__, e.g. v0.17.0), or
+#   - push a tag: git tag v0.17.1 && git push origin v0.17.1
 # Installed copies find it through https://github.com/<you>/lifeos/releases/latest/download/latest.json
 name: Release
 
@@ -90,13 +91,20 @@ jobs:
 
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Work out the release name (the tag, or v + the version in the code)
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then TAG="${{ github.ref_name }}"; else
+            TAG="v$(python -c 'import re; print(re.search(r"__version__ = \"([^\"]+)\"", open("lifeos/__init__.py").read()).group(1))')"
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "Releasing $TAG"
       - uses: actions/download-artifact@v4
         with:
           path: apps
@@ -111,7 +119,7 @@ jobs:
           print(",".join(k for k, f in APP_FILES.items() if os.path.exists(os.path.join("apps", f))))
           PY
           )
-          python packaging/make_update.py --out apps --feed "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}" --apps "$KEYS"
+          python packaging/make_update.py --out apps --feed "https://github.com/${{ github.repository }}/releases/download/$TAG" --apps "$KEYS"
           python packaging/make_update.py --out apps > /dev/null
           ls -la apps
       - name: Publish
@@ -122,4 +130,4 @@ jobs:
           import json
           print(json.load(open("apps/latest.json"))["notes"] or "See CHANGES.md")
           PY
-          gh release create "${{ github.ref_name }}" apps/* --title "Life OS ${{ github.ref_name }}" --notes-file notes.md
+          gh release create "$TAG" apps/* --target "${{ github.sha }}" --title "Life OS $TAG" --notes-file notes.md
