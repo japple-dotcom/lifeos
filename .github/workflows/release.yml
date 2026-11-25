@@ -91,8 +91,12 @@ jobs:
           path: out/${{ matrix.out }}
 
   release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: [test, build]
+    # always(): a Mac build GitHub never found a machine for counts as "cancelled", which would skip the release.
+    # The check below still insists on Windows, both Linux builds and at least one Mac app.
+    if: >-
+      always() && needs.test.result == 'success'
+      && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -110,6 +114,14 @@ jobs:
         with:
           path: apps
           merge-multiple: true
+      - name: Check the essential apps were built
+        run: |
+          ls -la apps
+          for f in LifeOS-windows.exe lifeos-linux-x86_64 lifeos-linux-arm64; do
+            [ -f "apps/$f" ] || { echo "::error::$f wasn't built"; exit 1; }
+          done
+          ls apps/LifeOS-mac-*.dmg >/dev/null 2>&1 || { echo "::error::Neither Mac app was built"; exit 1; }
+          [ -f apps/LifeOS-mac-arm64.dmg ] || echo "::warning::No Apple-chip Mac build this time (GitHub had no machine free); the Intel one runs on Apple-chip Macs through Rosetta."
       - name: Update file and feed
         run: |
           echo "{\"feed\": \"https://github.com/${{ github.repository }}/releases/latest/download/latest.json\"}" > lifeos/release.json
