@@ -3,7 +3,6 @@ secrets/
 data/
 __pycache__/
 .pytest_cache/
-lifeos/release.json
 .ruff_cache/
 dist/
 build/

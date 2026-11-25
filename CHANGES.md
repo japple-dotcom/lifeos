@@ -1,5 +1,9 @@
 # What's new
 
+## 0.17.1
+Life OS now finds its own updates on GitHub (japple-dotcom/lifeos): Settings > Updates offers each new version, and
+the overnight install works without downloading files.
+
 ## 0.17.0
 Settings > Check everything tests every connection from the app and says what to fix. Nightly encrypted backups to
 a USB stick or a synced folder (Google Drive, iCloud Drive, OneDrive), each one opened again and checked, with
