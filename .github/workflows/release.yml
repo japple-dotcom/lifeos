@@ -36,7 +36,7 @@ jobs:
         include:
           - { os: ubuntu-22.04, key: linux-x86_64, out: lifeos-linux-x86_64 }
           - { os: ubuntu-22.04-arm, key: linux-arm64, out: lifeos-linux-arm64 }
-          - { os: macos-14, key: mac-arm64, out: LifeOS-mac-arm64.dmg }
+          - { os: macos-15, key: mac-arm64, out: LifeOS-mac-arm64.dmg }   # Apple chips (M1 and later)
           - { os: macos-15-intel, key: mac-x64, out: LifeOS-mac-intel.dmg }
           - { os: windows-latest, key: windows-x64, out: LifeOS-windows.exe }
     runs-on: ${{ matrix.os }}
