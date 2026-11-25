@@ -75,6 +75,29 @@ jobs:
           curl -fsS http://127.0.0.1:8840/health | grep -q '"setup":true' || { cat "$RUNNER_TEMP/run.log"; exit 1; }
           curl -fsS http://127.0.0.1:8840/setup | grep -q "Welcome to Life OS"
           kill %1 || true
+      - name: Check it opens the main app for a household that's already set up
+        env:
+          LIFEOS_NO_TRAY: "1"
+        run: |
+          case "${{ runner.os }}" in
+            macOS) APP="dist/Life OS.app/Contents/MacOS/Life OS" ;;
+            Windows) APP="dist/LifeOS.exe" ;;
+            *) APP="dist/lifeos" ;;
+          esac
+          H="$RUNNER_TEMP/lifeos-home-setup"
+          mkdir -p "$H"
+          printf 'LIFEOS_API_KEY=ci-household-key-123\nLIFEOS_SIGNING_SECRET=ci-signing-secret-0123456789abcdef\n' > "$H/.env"
+          "$APP" --headless --home "$H" --port 8841 > "$RUNNER_TEMP/run2.log" 2>&1 &
+          PID=$!
+          for _ in $(seq 1 90); do curl -fsS http://127.0.0.1:8841/health > /dev/null 2>&1 && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8841/health
+          echo
+          ok=1
+          curl -fsS http://127.0.0.1:8841/app/ | grep -qi "<!doctype html" || ok=0
+          curl -fsS -o /dev/null http://127.0.0.1:8841/app/app.js || ok=0
+          curl -fsS -o /dev/null http://127.0.0.1:8841/app/wall.html || ok=0
+          kill $PID || true
+          if [ "$ok" = 1 ]; then echo "main app served"; else echo "::error::main app page missing"; cat "$RUNNER_TEMP/run2.log"; exit 1; fi
       - name: Package
         run: |
           mkdir -p out
