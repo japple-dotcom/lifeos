@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en-GB" class="wall kids-page">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Life OS · Chores</title>
+  <meta name="theme-color" content="#101214">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="wall.css">
+</head>
+<body>
+  <main id="main">
+    <!-- One-time sign-in by a grown-up -->
+    <section id="kids-login" class="wall-login" aria-labelledby="kl-title" hidden>
+      <h1 id="kl-title">Kids' chores</h1>
+      <p class="lead">On this tablet the children can tick off their own chores. They can't pay themselves or change anything else. The kitchen display keeps working too.</p>
+      <form id="kids-form" class="card stack" novalidate>
+        <div class="field">
+          <label for="kids-key">Household key (a grown-up types this once)</label>
+          <input id="kids-key" type="password" autocomplete="current-password" aria-describedby="kids-error">
+        </div>
+        <p id="kids-error" class="error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit">Start</button>
+      </form>
+    </section>
+
+    <div id="kids-app" hidden>
+      <div class="kids-top">
+        <h1>Who's done a chore?</h1>
+        <a href="wall.html" class="ask-btn">Back to the display</a>
+      </div>
+      <div class="kids-tabs" role="group" aria-label="Choose who you are" id="kids-tabs"></div>
+      <section id="kid-panel" class="panel" aria-live="polite"></section>
+      <p class="kids-cheer" id="kids-cheer" role="status" aria-live="assertive"></p>
+    </div>
+  </main>
+  <script src="kids.js"></script>
+</body>
+</html>

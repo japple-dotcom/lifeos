@@ -1,0 +1,125 @@
+# Builds the Life OS app for Mac, Windows, Linux and the Raspberry Pi, checks each one starts, and publishes them
+# with the update file and the update feed (latest.json) as a GitHub release.
+#
+# To release: bump __version__ in lifeos/__init__.py, add a section to CHANGES.md, then push a tag:
+#   git tag v0.15.1 && git push origin v0.15.1
+# Installed copies find it through https://github.com/<you>/lifeos/releases/latest/download/latest.json
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt ruff
+      - run: ruff check .
+      - run: python -m pytest -q tests/test_lifeos.py tests/test_app_packaging.py
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, key: linux-x86_64, out: lifeos-linux-x86_64 }
+          - { os: ubuntu-22.04-arm, key: linux-arm64, out: lifeos-linux-arm64 }
+          - { os: macos-14, key: mac-arm64, out: LifeOS-mac-arm64.dmg }
+          - { os: macos-15-intel, key: mac-x64, out: LifeOS-mac-intel.dmg }
+          - { os: windows-latest, key: windows-x64, out: LifeOS-windows.exe }
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.key == 'mac-x64' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Point the app at this repository's update feed
+        run: |
+          echo "{\"feed\": \"https://github.com/${{ github.repository }}/releases/latest/download/latest.json\"}" > lifeos/release.json
+      - run: pip install -r requirements.txt -r requirements-app.txt
+      - run: pyinstaller packaging/lifeos.spec --noconfirm
+      - name: Sign the Mac app for this computer (ad hoc)
+        if: runner.os == 'macOS'
+        run: codesign --force --deep -s - "dist/Life OS.app"
+      - name: Check it starts and shows the setup page
+        env:
+          LIFEOS_NO_TRAY: "1"
+        run: |
+          case "${{ runner.os }}" in
+            macOS) APP="dist/Life OS.app/Contents/MacOS/Life OS" ;;
+            Windows) APP="dist/LifeOS.exe" ;;
+            *) APP="dist/lifeos" ;;
+          esac
+          "$APP" --version
+          "$APP" --headless --home "$RUNNER_TEMP/lifeos-home" --port 8840 > "$RUNNER_TEMP/run.log" 2>&1 &
+          for _ in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8840/health | grep -q '"setup":true'; then echo "started"; break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8840/health | grep -q '"setup":true' || { cat "$RUNNER_TEMP/run.log"; exit 1; }
+          curl -fsS http://127.0.0.1:8840/setup | grep -q "Welcome to Life OS"
+          kill %1 || true
+      - name: Package
+        run: |
+          mkdir -p out
+          case "${{ runner.os }}" in
+            macOS)
+              mkdir dmg && cp -R "dist/Life OS.app" dmg/ && ln -s /Applications dmg/Applications
+              hdiutil create -volname "Life OS" -srcfolder dmg -ov -format UDZO "out/${{ matrix.out }}" ;;
+            Windows) cp dist/LifeOS.exe "out/${{ matrix.out }}" ;;
+            *) cp dist/lifeos "out/${{ matrix.out }}" && chmod +x "out/${{ matrix.out }}" ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.key }}
+          path: out/${{ matrix.out }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          path: apps
+          merge-multiple: true
+      - name: Update file and feed
+        run: |
+          echo "{\"feed\": \"https://github.com/${{ github.repository }}/releases/latest/download/latest.json\"}" > lifeos/release.json
+          KEYS=$(python - <<'PY'
+          import os, sys
+          sys.path.insert(0, "packaging")
+          from make_update import APP_FILES
+          print(",".join(k for k, f in APP_FILES.items() if os.path.exists(os.path.join("apps", f))))
+          PY
+          )
+          python packaging/make_update.py --out apps --feed "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}" --apps "$KEYS"
+          python packaging/make_update.py --out apps > /dev/null
+          ls -la apps
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > notes.md
+          import json
+          print(json.load(open("apps/latest.json"))["notes"] or "See CHANGES.md")
+          PY
+          gh release create "${{ github.ref_name }}" apps/* --title "Life OS ${{ github.ref_name }}" --notes-file notes.md

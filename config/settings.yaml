@@ -1,0 +1,302 @@
+# Life OS behaviour. Edit freely; restart the service to apply.
+
+household:
+  # Person ids. Each adult connects their own Google account in the app (Settings > Google accounts).
+  adults: [me, wife]
+  # Names shown in the app and used by the AI. Change to your real first names.
+  names: {me: Me, wife: My wife}
+  # Whose Google Tasks hold the shared lists (Shopping, Home maintenance...).
+  tasks_owner: me
+  # Kids' first names. Used for the chore chart, pocket money and the weekly chore split.
+  kids: []   # for example: [Ava, Leo]
+  # Your town and postcode area, used to find local tradespeople. For example: Leeds LS6
+  area: ""
+  notes: |
+    UK household, Europe/London. Shared family Google Calendar.
+    Rules: never spend money or message anyone outside the household without approval.
+
+# Getting jobs done: tradespeople, appointments and time set aside for jobs you do yourself.
+# When someone is usually around for a visit (24-hour times; leave blank for "not that day").
+# Times already busy in anyone's Google Calendar are never offered.
+availability:
+  mon: "08:00-18:00"
+  tue: "08:00-18:00"
+  wed: "08:00-18:00"
+  thu: "08:00-18:00"
+  fri: "08:00-18:00"
+  sat: "09:00-13:00"
+  sun: ""
+trade_notice_days: 2   # the earliest day offered to a tradesperson: this many days ahead
+chase_after_days: 3    # no reply after this many days: you get a nudge to chase or ask someone else
+auto_solve: true       # new jobs get their next step worked out straight away (who to call, what to buy)
+draft_trade_emails: true   # the email to a tradesperson also waits in Gmail drafts (Life OS never sends it itself)
+
+# Using Life OS through Gemini and the Google apps (see README, "Using it from Gemini").
+gemini:
+  # To-dos Gemini adds ("Hey Google, add ... to my to-dos") land in each person's main Google Tasks list.
+  # Life OS picks up new ones every 5 minutes, sorts them into the household lists and prepares the next step.
+  pick_up_todos: true
+  people: []           # who to pick up from; empty = every adult with Google connected
+  leave_dated: true    # reminders with a date ("remind me on Friday to...") stay where Gemini put them
+  # Keep a plainly worded copy of each tradesperson request in that person's "Waiting on" Google Tasks list,
+  # so Gemini can read it out. Ticking "... Tick to book" books that time; "Did they sort it?" ticks off the job.
+  waiting_on_tasks: true
+  # Each to-do's notes in Google Tasks get a "--- Life OS ---" section: next step, suggestion, Amazon basket
+  # links, who to call. Your own notes above it are kept.
+  notes_in_tasks: true
+stalled_after_days: 28   # Sunday 6:10pm: a nudge about jobs waiting this long with nothing under way
+
+# Predictions: Life OS learns from everything ticked, bought or done (in the app, in Google Tasks, from Amazon
+# orders and receipts) and sees the next one coming. Check the Predicted tab any time.
+predictions:
+  enabled: true
+  # "high": only very likely needs move onto Shopping or your to-dos by themselves, a little ahead of time.
+  # "medium" also moves likely ones; "off" never moves anything (you add from the Predicted tab yourself).
+  # Anything not moved gets one reminder on the day it's likely needed.
+  auto_add: high
+  lead_days: {shopping: 2, job: 7, checkup: 30, gift: 14}   # how far ahead things move across
+
+# Regular check-ups and services Life OS keeps an eye on. who: everyone, adults, kids, household (one for the
+# house) or names ("Joe, Sue"). Ticking off a matching to-do ("Book dentist for Ava") resets the clock.
+checkups:
+  - {what: Dentist check-up, every_months: 6, who: everyone, trade: dentist}
+  - {what: Eye test, every_months: 24, who: adults, trade: optician}
+  - {what: Boiler service, every_months: 12, who: household, trade: heating engineer}
+  - {what: Car MOT, every_months: 12, who: household, trade: garage}
+  - {what: Chimney sweep, every_months: 12, who: household, trade: chimney sweep}
+
+# Ordering the Shopping list online. UK supermarkets don't let other apps fill your basket, so Life OS gives
+# you one-tap search links for each item at your supermarket, plus a ready-to-paste list for their own
+# "shopping list" tools. Items with a saved Amazon product go into the Amazon basket in one tap.
+shopping:
+  supermarket: tesco    # tesco, sainsburys, asda, ocado, morrisons, waitrose or amazon (changeable in the app)
+  # search_url: "https://example-shop.co.uk/search?q={q}"   # any other shop: {q} is the item
+
+# Emails Life OS reads by itself (from household Gmail accounts that allowed it; never work email).
+mail:
+  receipts: true        # order emails: learns what you buy and how often; warranties go into Renewals
+  bills: true           # bill and direct debit emails: To-do > Money > Bills, with a warning when one goes up
+school:
+  # The school's email addresses or domains. Their emails become calendar events, to-dos for forms and
+  # payments, and "pack PE kit" reminders the day before.
+  senders: []           # e.g. ["office@stmarys.sch.uk", "@parentmail.co.uk"]
+
+# v0.15 ------------------------------------------------------------------------------------------------------
+# Updates: Settings > Updates and this computer. feed_url is filled in by the app download itself (GitHub releases);
+# set it only to use a different feed. auto: install new versions overnight (also a switch in Settings).
+updates:
+  feed_url: ""
+  auto: false
+
+# School holidays and childcare (To-do > Week): school.closed is added to by school emails and pasted term dates;
+# list closures here too if you like. A day needs childcare when the school's closed and every adult has 2+ hours
+# booked within these hours (busy/free only).
+childcare:
+  hours: "08:30-15:30"
+
+# Appliance care from Home Assistant (Predicted tab). The state each appliance shows when a cycle finishes, how
+# many cycles between jobs, and buy: true for things to put on Shopping. Or below: N for "% left" sensors.
+appliance_care: []
+#  - {what: Dishwasher salt, entity: sensor.dishwasher_status, cycle_end: finished, every: 30, buy: true}
+#  - {what: Clean the washing machine drum, entity: sensor.washing_machine_status, cycle_end: finished, every: 40}
+#  - {what: Robot vacuum filter, entity: sensor.robot_vacuum_filter_remaining, below: 10, buy: true}
+
+# Cheapest time to run (Home screen), for Octopus Agile or Go. The tariff code goes in Settings > Keys
+# (OCTOPUS_TARIFF). Plugs listed here can be switched ON at the cheap time; Life OS never switches them off.
+energy:
+  appliances: []
+#   - {name: Dishwasher, entity: switch.dishwasher_plug, hours: 2}
+#   - {name: Washing machine, entity: switch.washing_machine_plug, hours: 2}
+  # Weekly energy report (Home screen, and Sunday 6:30pm): a kWh meter sensor and/or the heating thermostat in
+  # Home Assistant. unit_rate in pence per kWh; leave it 0 to use your Octopus average or a typical UK price.
+  usage_entity: ""      # e.g. sensor.electricity_meter_energy_consumption (a "total increasing" kWh sensor)
+  heating_entity: ""    # e.g. climate.living_room
+  unit_rate: 0
+
+# v0.16 ------------------------------------------------------------------------------------------------------
+# Voice: Life OS on your Google speakers (through Home Assistant's Google Cast). Choose the speaker in
+# Settings > Voice and speakers; the phrases and the Home Assistant setup to copy are there too.
+voice:
+  speaker: ""           # e.g. media_player.kitchen_speaker (the app's choice wins)
+  tts_entity: ""        # e.g. tts.home_assistant_cloud; blank uses Google Translate's voice
+  lifeos_url_for_ha: "" # how Home Assistant reaches Life OS, e.g. http://192.168.1.20:8800 (blank: worked out)
+  # Said out loud at set times (quiet hours respected). say: brief, today, dinner, bins, chores, visits, or a sentence.
+  announce:
+    - {say: brief, at: "07:15", days: mon-fri}
+#   - {say: bins, at: "19:30", days: wed}
+#   - {say: "Time to get ready for school", at: "08:10", days: mon-fri}
+
+# School run (To-do > Week): drop-off and pick-up times and the margin either side checked in each adult's
+# calendar (busy/free only). Club pick-ups come from calendar entries with the child's name and "club",
+# "swimming", "football" and so on. Sunday 6:25pm: a note if a run has nobody free.
+school_run:
+  drop_off: "08:30"
+  pick_up: "15:15"
+  minutes: 30
+
+# Pocket money: a weekly amount added to what each child is owed every Saturday morning (also set in the app,
+# Home > Chores). Saving goals are set in the app.
+pocket_money:
+  allowance: {}         # e.g. {Ava: 3, Leo: 2}
+
+# v0.17 ------------------------------------------------------------------------------------------------------
+# Away mode (a switch on each trip in To-do > Projects): heating down to frost_temp while you're away and back to
+# normal_temp at warm_up on the day you come home; these lights on at dusk and off at lights_off; a house check
+# notification at check_at. heating_entity blank: uses energy.heating_entity. Nothing is ever unlocked or opened.
+away:
+  heating_entity: ""
+  frost_temp: 12
+  normal_temp: 20
+  warm_up: "14:00"
+  lights: []            # e.g. [light.living_room, light.landing]
+  lights_off: "22:30"
+  check_at: "18:00"
+
+# Seasonal house jobs (Home > Seasonal jobs): what the house has (garden, gas boiler, chimney, tumble dryer, car,
+# outside tap) so only jobs that apply are suggested; off: job ids never to suggest. Also set in the app.
+seasonal:
+  have: [garden, gas boiler, car, outside tap]
+  "off": []            # (quoted: a bare off means "false" in YAML)
+
+# Quick dinners, preferred on busy evenings when Life OS suggests the week's dinners.
+quick_meals: [pasta, stir fry, fajitas, omelette, soup]
+
+# Leaving home check (Home screen). Fixes only ever make the house safer: lights and listed plugs off,
+# heating down, doors locked. Nothing is ever unlocked or opened.
+leaving:
+  eco_temp: 16
+  switch_off: []        # plugs to turn off when you leave, e.g. [switch.hair_straighteners, switch.iron]
+  ignore: []            # devices to leave alone, e.g. [light.fish_tank]
+
+# Simple Google Tasks lists shown under Lists > Lists. (To-dos live in the categories below.)
+# Anything typed into a list called "Inbox" in Google Tasks is sorted automatically every 15 minutes.
+task_lists: [Shopping, Waiting on]
+
+# To-do categories: each is a Google Tasks list. The AI files every to-do into one of these using the
+# description, and works out priority, timescale, effort, next action and whether it repeats.
+todo_categories:
+  - {name: Home maintenance, about: "repairs, servicing, appliances, boiler, leaks, cleaning jobs, safety checks"}
+  - {name: DIY and projects, about: "decorating, improvements, building, fitting things, bigger jobs around the house"}
+  - {name: Garden, about: "lawn, hedges, planting, shed, fences, outdoor furniture"}
+  - {name: Car, about: "MOT, service, tyres, cleaning, parking permits, car admin"}
+  - {name: Admin and renewals, about: "bills, banking, insurance, forms, passports, letters, paperwork"}
+  - {name: Health and appointments, about: "GP, dentist, opticians, prescriptions, vet, haircuts"}
+  - {name: Kids, about: "school, clubs, uniforms, forms, kids' activities and needs"}
+  - {name: Errands, about: "returns, post office, collecting or dropping off, buying a specific item"}
+  - {name: Family and social, about: "birthdays, gifts, cards, visits, plans with friends and family"}
+
+# Notifications: during quiet hours ordinary notifications wait and arrive as one digest afterwards.
+# Approval requests and urgent alerts always come through.
+notifications:
+  quiet_hours: "21:30-07:00"
+
+# Meal planning: the AI plans around busy evenings. Items here never go onto the Shopping list.
+favourite_meals: [Spaghetti bolognese, Chicken fajitas, Fish pie, Veggie curry, Roast chicken]
+pantry_staples: [salt, pepper, oil, olive oil, sugar, flour, butter, stock cubes, garlic, rice, pasta, soy sauce, dried herbs, spices]
+
+# Kids' chores and pocket money (pounds). 'who' limits a chore to some children; leave it out for all kids.
+# Ticked off on the app's Home screen or with an NFC tag (log_chore action).
+chores:
+  - {id: bed, name: Make bed, value: 0.20}
+  - {id: dishwasher, name: Empty dishwasher, value: 0.50}
+  - {id: table, name: Lay the table, value: 0.30}
+  - {id: bins, name: Bins out, value: 0.50}
+  - {id: feed_pet, name: Feed the pet, value: 0.20}
+
+# Big buttons on the app's Home screen. They run straight away (you pressed them yourself).
+quick_actions:
+  - {id: away, label: "Leaving home", service: scene.turn_on, entity_id: scene.away}
+  - {id: home, label: "We're home", service: scene.turn_on, entity_id: scene.home}
+  - {id: night, label: "Goodnight", service: scene.turn_on, entity_id: scene.goodnight}
+  - {id: vacuum, label: "Vacuum now", service: vacuum.start, entity_id: vacuum.robot}
+  - {id: lights_off, label: "All lights off", service: light.turn_off, entity_id: all}
+
+# Devices shown on the Home screen with their current state.
+home_status: [lock.front_door, binary_sensor.back_door, sensor.washer_status, vacuum.robot, climate.living_room]
+
+# Safety policy for Home Assistant service calls made by the agent.
+policy:
+  # Domains the AI may control freely. Keep this to things that are harmless if it gets them wrong.
+  # (Not 'notify': that can send SMS/email to anyone. Not 'script' or 'automation': they can do anything.)
+  # Careful with 'switch': if a smart relay opens a gate or garage door, remove 'switch' here and allow
+  # only safe switches through Home Assistant, or move that switch's service to approval_services.
+  allowed_domains: [light, switch, scene, media_player, climate, vacuum, fan, todo, tts]
+  # Domains where every service waits for your Approve tap.
+  approval_domains: [script]
+  # Exact services that wait for your Approve tap (requests expire after 15 minutes).
+  approval_services: [lock.unlock, lock.open, alarm_control_panel.alarm_disarm, cover.open_cover, valve.open_valve]
+  # Anything not listed above is refused. Locking a door (lock.lock) is not listed: add it to
+  # approval_services or allow the 'lock' domain only if you are comfortable with that.
+
+# NFC tags. Each tag ID (from the Home Assistant Tags page) maps to deterministic
+# actions that run instantly with no AI, plus an optional prompt for the agent.
+tags:
+  kitchen-milk:
+    name: Kitchen cupboard (milk)
+    actions:
+      - add_task: {list: Shopping, title: Milk}
+    say: Milk added to shopping.
+  dishwasher:
+    name: Dishwasher emptied
+    actions:
+      - log_chore: {chore: Empty dishwasher}
+      - ha_service: {service: light.turn_off, entity_id: light.hall_reminder}
+    say: Thanks, dishwasher logged.
+  bins-out:
+    name: Bins out
+    actions:
+      - log_chore: {chore: Bins out}
+      - ha_service: {service: light.turn_off, entity_id: light.porch}
+  front-door-leaving:
+    name: Front door, leaving
+    actions:
+      - ha_service: {service: scene.turn_on, entity_id: scene.away}
+      - ha_service: {service: vacuum.start, entity_id: vacuum.robot}
+    agent_prompt: >
+      We are leaving the house. Check today's calendar for anything we need to
+      take (kit, forms, gifts) and push one short reminder if there is something.
+  bedside-goodnight:
+    name: Goodnight
+    actions:
+      - ha_service: {service: scene.turn_on, entity_id: scene.goodnight}
+    agent_prompt: >
+      Goodnight routine. Look at tomorrow's first calendar event and tell me in one
+      line what time I need to be up and anything to prepare tonight.
+
+# Scheduled loops (cron in LIFEOS_TZ). The prompt is the standing instruction.
+loops:
+  morning_brief:
+    cron: "30 6 * * mon-fri"
+    model: default
+    prompt: >
+      Morning brief. Read today's calendar, overdue and due-today tasks (list_todos), anyone we're
+      waiting on (list_open_loops) and home state (bins, appliances, doors). Move anything stale to a
+      sensible date, add reminders for school kit or payments you find, then push me today in at most
+      5 short lines plus up to 3 decisions (a tradesperson who replied or went quiet counts as one).
+  inbox_triage:
+    cron: "0 8,13,18 * * *"
+    model: default
+    prompt: >
+      Inbox triage. For each person who allowed Gmail, search their Gmail with
+      "is:unread newer_than:2d -label:life-os-handled -category:promotions -category:social"
+      (use the person field). For anything needing action, add it with add_todo (include a link to the
+      email in the notes; it is sorted and the next step prepared automatically). Replies from
+      tradespeople we emailed are already tracked: don't add those again. Draft replies in that person's account
+      where a reply is obviously needed (drafts only). Then mark every email you looked at as handled
+      (mark_email_handled) so it is not processed again. Push one line only if a draft is waiting or
+      something is urgent; otherwise stay silent.
+  evening_reset:
+    cron: "30 20 * * *"
+    model: default
+    prompt: >
+      Evening reset. Check doors, lights and appliances; fix anything left on. Look at
+      tomorrow's calendar and tasks and push tomorrow in 3 lines.
+  weekly_review:
+    cron: "0 18 * * sun"
+    model: deep
+    prompt: >
+      Weekly review. Look at next week's calendar, all open tasks and the chore log.
+      Plan next week's dinners with set_meal_plan (from the household's favourite_meals where they fit,
+      quick meals on busy evenings), which also builds the Shopping list,
+      propose a fair chore split between the adults and kids, and list renewals or
+      birthdays coming up in the next 6 weeks. Push me a summary with the decisions.

@@ -1,0 +1,21 @@
+services:
+  lifeos:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8800:8800"   # keep this on your home network; reach it remotely through Tailscale or a VPN
+    volumes:
+      - ./config:/app/config
+      - ./secrets:/app/secrets
+      - ./data:/app/data
+
+  # Optional: self-hosted phone notifications instead of the public ntfy.sh
+  # ntfy:
+  #   image: binwiederhier/ntfy
+  #   command: serve
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8090:80"
+  #   volumes:
+  #     - ./ntfy-cache:/var/cache/ntfy

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Set up Life OS</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="/app/icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="/app/styles.css">
+  <style>
+    .setup { max-width: 40rem; margin: 0 auto; padding: 1rem 1rem 4rem; }
+    .key-show { font-size: 1.6rem; font-weight: 750; letter-spacing: 0.02em; padding: 1rem; border-radius: 12px;
+                background: var(--accent-soft); border: 2px solid var(--accent); text-align: center; word-break: break-word; }
+    .setup input[type=text], .setup input[type=password], .setup input[type=url] { width: 100%; }
+    .found { border-left: 6px solid var(--accent); }
+  </style>
+</head>
+<body>
+  <main id="main" class="setup" tabindex="-1">
+    <h1 id="title">Welcome to Life OS</h1>
+    <p class="lead" id="intro">A few questions and you're ready. Everything stays on this computer.</p>
+    <div id="status" role="status" aria-live="polite" class="meta"></div>
+
+    <section class="block card stack found" id="old-block" aria-labelledby="old-title" hidden>
+      <h2 id="old-title">You've used Life OS before</h2>
+      <p id="old-text"></p>
+      <button type="button" class="btn btn-primary btn-block" id="old-bring">Bring my settings across</button>
+      <p class="hint">Copies your settings, Google connections and history into the app. The old folder is left as it was.</p>
+    </section>
+
+    <form id="setup-form" class="stack" novalidate>
+      <section class="block card stack" aria-labelledby="hh-title">
+        <h2 id="hh-title">Your household</h2>
+        <div class="field">
+          <label for="adult1">Your first name</label>
+          <input id="adult1" type="text" autocomplete="given-name" required>
+        </div>
+        <div class="field">
+          <label for="adult2">The other adult's first name</label>
+          <p class="hint" id="adult2-hint">Leave blank if it's just you.</p>
+          <input id="adult2" type="text" aria-describedby="adult2-hint">
+        </div>
+        <div class="field">
+          <label for="kids">Children's first names</label>
+          <p class="hint" id="kids-hint">Separated by commas, for the chore chart and school reminders. Blank if none.</p>
+          <input id="kids" type="text" aria-describedby="kids-hint">
+        </div>
+        <div class="field">
+          <label for="area">Your town and postcode area</label>
+          <p class="hint" id="area-hint">For finding local tradespeople, for example: Leeds LS6</p>
+          <input id="area" type="text" aria-describedby="area-hint" autocomplete="off">
+        </div>
+      </section>
+
+      <section class="block card stack" aria-labelledby="ai-title">
+        <h2 id="ai-title">The assistant</h2>
+        <fieldset>
+          <legend>Which AI should run Life OS? You can switch later.</legend>
+          <div class="radio-row"><input type="radio" name="provider" id="p-claude" value="claude" checked><label for="p-claude">Claude</label></div>
+          <div class="radio-row"><input type="radio" name="provider" id="p-gemini" value="gemini"><label for="p-gemini">Gemini</label></div>
+        </fieldset>
+        <div class="field">
+          <label for="ai-key">Its API key</label>
+          <p class="hint" id="ai-key-hint">From console.anthropic.com (Claude) or aistudio.google.com/apikey (Gemini). You can add it later in Settings; until then Life OS sorts things with simple rules.</p>
+          <input id="ai-key" type="password" autocomplete="off" aria-describedby="ai-key-hint">
+        </div>
+      </section>
+
+      <section class="block card stack" aria-labelledby="phones-title">
+        <h2 id="phones-title">Reaching it from your phones</h2>
+        <div class="field">
+          <label for="public-url">Life OS address for phones</label>
+          <p class="hint" id="public-url-hint">Phones need a private https address, which Tailscale gives you (see the guide). Leave it blank to start with this computer only; you can add it later in Settings.</p>
+          <input id="public-url" type="url" inputmode="url" aria-describedby="public-url-hint" placeholder="https://lifeos.tail1234.ts.net">
+        </div>
+        <details>
+          <summary>Home Assistant (optional)</summary>
+          <div class="stack">
+            <div class="field"><label for="ha-url">Home Assistant address</label><input id="ha-url" type="url" placeholder="http://homeassistant.local:8123"></div>
+            <div class="field"><label for="ha-token">Long-lived access token</label><input id="ha-token" type="password" autocomplete="off"></div>
+          </div>
+        </details>
+      </section>
+
+      <p id="form-error" class="error" role="alert"></p>
+      <button type="submit" class="btn btn-primary btn-block">Finish setting up</button>
+    </form>
+
+    <section class="block card stack" id="done-block" aria-labelledby="done-title" hidden>
+      <h2 id="done-title" tabindex="-1">You're set up</h2>
+      <p>This is your <strong>household key</strong>. Each person types it once on their phone to sign in. Keep it somewhere safe.</p>
+      <p class="key-show" id="key-show"></p>
+      <button type="button" class="btn btn-secondary btn-block" id="key-copy">Copy the key</button>
+      <button type="button" class="btn btn-primary btn-block" id="open-app">Open Life OS</button>
+    </section>
+
+    <section class="block stack" aria-labelledby="demo-title" id="demo-block">
+      <h2 id="demo-title">Not ready yet?</h2>
+      <p class="hint">Look around a made-up household first. Nothing is saved, and you can set up properly afterwards from Settings.</p>
+      <button type="button" class="btn btn-secondary btn-block" id="demo">Look around with sample data</button>
+    </section>
+    <p class="meta" id="where"></p>
+  </main>
+  <script src="/app/setup.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+# Extra packages for building the app download (not needed to run from a source folder).
+pyinstaller>=6.10
+tzdata                                  # time zones on computers without them (Windows)

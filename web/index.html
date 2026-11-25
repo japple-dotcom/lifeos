@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Life OS</title>
+  <meta name="description" content="Your household assistant">
+  <meta name="theme-color" content="#0a5c53" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121416" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- Announcements for screen readers and on-screen confirmations -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <dialog id="add-dialog" class="sheet" aria-labelledby="add-title">
+    <form id="add-form" class="stack" novalidate>
+      <h2 id="add-title">Add a job</h2>
+      <div class="field">
+        <label for="add-text">What needs doing?</label>
+        <p class="hint" id="add-hint">Say it naturally. Life OS sorts it and works out the next step.</p>
+        <textarea id="add-text" rows="3" aria-describedby="add-hint" placeholder="For example: the kitchen socket has stopped working"></textarea>
+      </div>
+      <div class="composer-actions">
+        <button type="button" class="btn btn-icon" id="add-mic" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span>Speak</span></button>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+      <div id="add-result" role="status" aria-live="polite"></div>
+      <button type="button" class="btn btn-secondary btn-block" data-close>Close</button>
+    </form>
+  </dialog>
+
+  <dialog id="edit-dialog" class="sheet" aria-labelledby="edit-title">
+    <form id="edit-form" class="stack" novalidate>
+      <h2 id="edit-title">Change this job</h2>
+      <div class="field"><label for="edit-name">Name</label><input id="edit-name" type="text" autocomplete="off" required></div>
+      <div class="field">
+        <label for="edit-due">Date</label>
+        <p class="hint" id="edit-due-hint">Leave empty for no date.</p>
+        <input id="edit-due" type="date" aria-describedby="edit-due-hint">
+      </div>
+      <div class="field"><label for="edit-list">List</label><select id="edit-list"></select></div>
+      <div class="field"><label for="edit-who">For</label><select id="edit-who"></select></div>
+      <div class="field">
+        <label for="edit-priority">Importance</label>
+        <select id="edit-priority"><option value="1">Urgent</option><option value="2">High</option><option value="3">Normal</option><option value="4">Low</option></select>
+      </div>
+      <div class="field"><label for="edit-next">Next step</label><input id="edit-next" type="text" autocomplete="off"></div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" data-close>Cancel</button>
+      </div>
+      <button type="button" class="btn btn-danger btn-block" id="edit-delete">Delete this job</button>
+    </form>
+  </dialog>
+
+  <dialog id="product-dialog" class="sheet" aria-labelledby="product-title">
+    <form id="product-form" class="stack" novalidate>
+      <h2 id="product-title">Usual Amazon product</h2>
+      <p class="hint">Next time this is on the list (or Life OS sees it coming) it goes into your Amazon basket in one tap.</p>
+      <div class="field"><label for="product-item">Item</label><input id="product-item" type="text" autocomplete="off"></div>
+      <div class="field">
+        <label for="product-link">Amazon link</label>
+        <p class="hint" id="product-link-hint">On Amazon, open the product, tap Share, then Copy link, and paste it here.</p>
+        <input id="product-link" type="url" inputmode="url" autocomplete="off" aria-describedby="product-link-hint">
+      </div>
+      <div class="field"><label for="product-name">Product name <span class="optional">(optional)</span></label><input id="product-name" type="text" autocomplete="off"></div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" data-close>Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="plan-dialog" class="sheet" aria-labelledby="plan-title">
+    <div class="stack">
+      <h2 id="plan-title">Plan my week</h2>
+      <p class="hint">Free evening and weekend times this week for jobs you'll do yourself. Untick any you don't want.</p>
+      <div id="plan-body" role="status" aria-live="polite"></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" id="plan-confirm" hidden>Add to calendar</button>
+        <button type="button" class="btn btn-secondary" data-close>Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="haggle-dialog" class="sheet" aria-labelledby="haggle-title">
+    <div class="stack">
+      <h2 id="haggle-title">Ask for a better price</h2>
+      <form id="haggle-ask" class="stack" novalidate hidden>
+        <div class="field"><label for="haggle-quoted">Their price for next year (£)</label><input id="haggle-quoted" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label for="haggle-last">What you paid last year (£, if you know)</label><input id="haggle-last" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <button type="submit" class="btn btn-primary btn-block">Show me what to say</button>
+      </form>
+      <div id="haggle-body" class="stack" role="status" aria-live="polite"></div>
+      <div class="btn-row" id="haggle-actions" hidden>
+        <button type="button" class="btn btn-primary" id="haggle-draft">Put the email in Gmail drafts</button>
+        <button type="button" class="btn btn-secondary" id="haggle-todo">Add a to-do to ring them</button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" data-close>Close</button>
+    </div>
+  </dialog>
+
+  <dialog id="agenda-dialog" class="sheet agenda-sheet" aria-labelledby="agenda-title">
+    <div class="stack">
+      <h2 id="agenda-title">Sunday agenda</h2>
+      <p class="meta" id="agenda-made"></p>
+      <div id="agenda-body" class="stack"></div>
+      <div class="btn-row no-print">
+        <button type="button" class="btn btn-secondary" id="agenda-print">Print</button>
+        <button type="button" class="btn btn-secondary" id="agenda-copy">Copy as text</button>
+        <button type="button" class="btn btn-secondary" data-close>Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <header class="topbar" id="topbar" hidden>
+    <span class="brand"><svg aria-hidden="true" viewBox="0 0 24 24" class="brand-mark"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="m9 14.5 2.2 2.2L15.5 12"/></svg>Life OS</span>
+    <span class="ai-badge" id="ai-badge"></span>
+  </header>
+
+  <p id="outbox-banner" class="outbox-banner" role="status" hidden></p>
+  <main id="main" tabindex="-1">
+    <!-- Sign in -->
+    <section id="view-login" class="view" aria-labelledby="login-title" hidden>
+      <h1 id="login-title">Welcome to Life OS</h1>
+      <p class="lead">Your household assistant. Sign in once on this phone and it stays signed in.</p>
+      <form id="login-form" class="card stack" novalidate>
+        <fieldset>
+          <legend>Who is using this phone?</legend>
+          <div id="login-people" class="choice-grid"></div>
+        </fieldset>
+        <div class="field">
+          <label for="login-key">Household key</label>
+          <p class="hint" id="login-key-hint">The key set up for your home. Ask whoever installed Life OS.</p>
+          <input id="login-key" name="key" type="password" autocomplete="current-password" required aria-describedby="login-key-hint login-error">
+        </div>
+        <p id="login-error" class="error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <!-- Today -->
+    <section id="view-today" class="view" aria-labelledby="today-title" hidden>
+      <h1 id="today-title">Today</h1>
+      <p class="lead" id="today-date"></p>
+      <div id="today-warnings"></div>
+      <section class="block card brief" aria-labelledby="brief-title" id="brief-block" hidden>
+        <h2 id="brief-title">Latest briefing</h2>
+        <p class="meta" id="brief-meta"></p>
+        <div id="brief-text" class="brief-text"></div>
+      </section>
+      <p class="dinner-line" id="dinner-line"></p>
+      <section class="block card stack" id="rate-block" aria-labelledby="rate-title" hidden>
+        <h2 id="rate-title">How was dinner?</h2>
+        <p id="rate-text"></p>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="rate-up">Loved it</button>
+          <button type="button" class="btn btn-secondary" id="rate-down">Not again</button>
+          <button type="button" class="btn btn-secondary" id="rate-skip">Skip</button>
+        </div>
+      </section>
+      <section class="block card stack" id="cc-today-block" aria-labelledby="cc-today-title" hidden>
+        <h2 id="cc-today-title">Childcare needed</h2>
+        <ul class="list compact" id="cc-today"></ul>
+        <a class="btn btn-secondary btn-block" href="#tasks?sec=week">Sort it</a>
+      </section>
+      <section class="block" aria-labelledby="approvals-title" id="approvals-block" hidden>
+        <h2 id="approvals-title">Needs your OK</h2>
+        <ul class="list" id="approvals-list"></ul>
+      </section>
+      <section class="block card stack getting-started" id="setup-card" aria-labelledby="setup-card-title" hidden>
+        <div class="row">
+          <h2 id="setup-card-title" class="grow">Getting started</h2>
+          <span class="meta" id="setup-progress"></span>
+        </div>
+        <ol class="steps" id="setup-steps"></ol>
+        <p><a href="#settings?sec=setup-all">The full list is in Settings</a></p>
+        <button type="button" class="linkish" id="setup-hide">Hide this list</button>
+      </section>
+      <section class="block" aria-labelledby="nextup-title" id="nextup-block" hidden>
+        <h2 id="nextup-title">Next up</h2>
+        <ul class="list" id="nextup-list"></ul>
+      </section>
+      <section class="block" aria-labelledby="events-title">
+        <h2 id="events-title">Calendar</h2>
+        <ul class="list" id="events-list"></ul>
+      </section>
+      <section class="block" aria-labelledby="due-title" id="due-block">
+        <h2 id="due-title">Due today</h2>
+        <ul class="list" id="due-list"></ul>
+      </section>
+      <section class="block" aria-labelledby="waiting-title" id="waiting-block" hidden>
+        <h2 id="waiting-title">Waiting on</h2>
+        <ul class="list compact" id="waiting-list"></ul>
+      </section>
+      <section class="block" aria-labelledby="renewals-soon-title" id="renewals-soon-block" hidden>
+        <h2 id="renewals-soon-title">Coming up</h2>
+        <ul class="list compact" id="renewals-soon"></ul>
+      </section>
+      <section class="block" aria-labelledby="chores-title">
+        <h2 id="chores-title">Recent chores</h2>
+        <ul class="list compact" id="chores-list"></ul>
+      </section>
+      <button class="btn btn-secondary btn-block" type="button" id="today-refresh">Refresh</button>
+    </section>
+
+    <!-- Ask -->
+    <section id="view-ask" class="view view-ask" aria-labelledby="ask-title" hidden>
+      <div class="title-row">
+        <h1 id="ask-title">Ask</h1>
+        <button type="button" class="btn btn-secondary btn-small" id="new-chat" hidden>New conversation</button>
+      </div>
+      <p class="lead">Say or type anything: "Add milk to shopping", "What's on tomorrow?", "Plan dinners this week".</p>
+      <div id="chat" class="chat" role="log" aria-live="polite" aria-label="Conversation" aria-relevant="additions"></div>
+      <div class="suggestions" id="suggestions" role="group" aria-label="Suggestions">
+        <button type="button" class="chip">What's on today?</button>
+        <button type="button" class="chip">Add milk to shopping</button>
+        <button type="button" class="chip">Plan dinners for this week</button>
+        <button type="button" class="chip">Anything I've forgotten?</button>
+      </div>
+      <form id="ask-form" class="composer" novalidate>
+        <label for="ask-input" class="visually-hidden">Your message</label>
+        <textarea id="ask-input" rows="2" placeholder="Type here, or tap the microphone" enterkeyhint="send"></textarea>
+        <div class="composer-actions">
+          <button type="button" class="btn btn-icon" id="mic-btn" aria-pressed="false">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+            <span id="mic-label">Speak</span>
+          </button>
+          <button type="submit" class="btn btn-primary" id="send-btn">Send</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Tasks -->
+    <section id="view-tasks" class="view" aria-labelledby="tasks-title" hidden>
+      <h1 id="tasks-title">To-do</h1>
+      <div class="segmented" role="group" aria-label="Sections">
+        <button type="button" data-sec="todo" aria-pressed="true">To-do</button>
+        <button type="button" data-sec="predicted" aria-pressed="false">Predicted</button>
+        <button type="button" data-sec="week" aria-pressed="false">Week</button>
+        <button type="button" data-sec="projects" aria-pressed="false">Projects</button>
+        <button type="button" data-sec="lists" aria-pressed="false">Lists</button>
+        <button type="button" data-sec="meals" aria-pressed="false">Dinners</button>
+        <button type="button" data-sec="money" aria-pressed="false">Money</button>
+        <button type="button" data-sec="renewals" aria-pressed="false">Renewals</button>
+      </div>
+
+      <div id="sec-todo" class="sec">
+        <form id="todo-form" class="card stack" novalidate>
+          <div class="field">
+            <label for="todo-text">What needs doing?</label>
+            <p class="hint" id="todo-hint">Just say it naturally. Life OS works out the category, how important and urgent it is, how long it'll take, the first step and whether it repeats.</p>
+            <textarea id="todo-text" rows="2" aria-describedby="todo-hint" placeholder="For example: the bath tap is dripping again"></textarea>
+          </div>
+          <div class="composer-actions">
+            <button type="button" class="btn btn-icon" id="todo-mic" aria-pressed="false">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+              <span>Speak</span>
+            </button>
+            <button type="submit" class="btn btn-primary">Add</button>
+          </div>
+          <div id="todo-result" role="status" aria-live="polite"></div>
+        </form>
+        <div class="todo-tools">
+          <div class="field">
+            <label for="todo-search">Search</label>
+            <input id="todo-search" type="search" autocomplete="off" enterkeyhint="search" placeholder="Words in the job">
+          </div>
+          <div class="field filter">
+            <label for="todo-filter">Show</label>
+            <select id="todo-filter"></select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-block" id="plan-week-btn" aria-haspopup="dialog">Plan my week</button>
+        <p class="meta" id="todo-count" role="status" aria-live="polite"></p>
+        <div id="todo-groups"></div>
+      </div>
+
+      <div id="sec-predicted" class="sec" hidden>
+        <h2 class="sec-title">Predicted</h2>
+        <p class="hint">Learned from what you buy and do. Very likely needs move onto your lists by themselves a little before they're due, and you get a reminder for likely ones. Nothing here is on your to-do list until it moves across.</p>
+        <p class="meta" id="pred-learned" role="status" aria-live="polite"></p>
+        <div id="pred-groups"></div>
+      </div>
+
+      <div id="sec-week" class="sec" hidden>
+        <h2 class="sec-title">The week</h2>
+        <section class="block" aria-labelledby="week-done-title">
+          <h3 id="week-done-title">Done in the last 7 days</h3>
+          <ul class="list compact" id="week-done"></ul>
+          <p class="meta" id="week-bought"></p>
+        </section>
+        <section class="block" aria-labelledby="week-waiting-title">
+          <h3 id="week-waiting-title">Waiting on</h3>
+          <ul class="list compact" id="week-waiting"></ul>
+        </section>
+        <section class="block" aria-labelledby="week-events-title">
+          <h3 id="week-events-title">Next 7 days</h3>
+          <ul class="list compact" id="week-events"></ul>
+        </section>
+        <section class="block" aria-labelledby="week-pred-title">
+          <h3 id="week-pred-title">Probably needed this week</h3>
+          <ul class="list compact" id="week-predicted"></ul>
+        </section>
+        <button type="button" class="btn btn-primary btn-block" id="week-plan" aria-haspopup="dialog">Plan my week</button>
+        <button type="button" class="btn btn-secondary btn-block" id="agenda-open" aria-haspopup="dialog">Sunday agenda</button>
+        <section class="block card stack" id="admin-block" aria-labelledby="admin-title" hidden>
+          <h3 id="admin-title">Life admin hour</h3>
+          <ol class="list compact" id="admin-jobs"></ol>
+          <p id="admin-slot" class="lead"></p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="admin-book">Book it</button>
+            <button type="button" class="btn btn-secondary" id="admin-other">Another time</button>
+          </div>
+        </section>
+        <section class="block" id="run-block" aria-labelledby="run-title" hidden>
+          <h3 id="run-title">School run this week</h3>
+          <p class="hint">Who's free at drop-off and pick-up, from both calendars. "Claim it" puts it in the family calendar.</p>
+          <ul class="list" id="run-days"></ul>
+        </section>
+        <section class="block" aria-labelledby="cc-title">
+          <h3 id="cc-title">School holidays and childcare</h3>
+          <p class="hint">Days the school is closed and you're both busy, from your calendars (busy or free only). Nothing here means you're covered.</p>
+          <ul class="list" id="cc-gaps"></ul>
+          <h4 id="cc-closed-title">School closed</h4>
+          <ul class="list compact" id="cc-closed" aria-labelledby="cc-closed-title"></ul>
+          <form id="cc-form" class="card stack" novalidate>
+            <div class="field">
+              <label for="cc-text">Paste the school's term dates</label>
+              <p class="hint" id="cc-text-hint">Copy them from the school's website or letter. School emails are read for these too.</p>
+              <textarea id="cc-text" rows="4" aria-describedby="cc-text-hint" placeholder="Christmas holidays: 21 December 2026 - 1 January 2027"></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-block">Add these dates</button>
+          </form>
+        </section>
+      </div>
+
+      <div id="sec-money" class="sec" hidden>
+        <h2 class="sec-title">Money</h2>
+        <p class="hint">From receipts and order emails Life OS reads. It stays on your home computer.</p>
+        <section class="block" aria-labelledby="subs-title">
+          <h3 id="subs-title">Subscriptions</h3>
+          <p id="subs-total" class="lead"></p>
+          <ul class="list" id="subs-list"></ul>
+          <details>
+            <summary>Add one yourself</summary>
+            <form id="subs-form" class="stack" novalidate>
+              <div class="field"><label for="subs-name">What is it?</label><input id="subs-name" type="text" placeholder="For example: Netflix"></div>
+              <div class="field"><label for="subs-amount">How much (£)</label><input id="subs-amount" type="number" step="0.01" min="0" inputmode="decimal"></div>
+              <div class="field"><label for="subs-period">How often</label>
+                <select id="subs-period"><option value="monthly">Every month</option><option value="yearly">Every year</option><option value="weekly">Every week</option></select></div>
+              <div class="field"><label for="subs-next">Next payment (if you know)</label><input id="subs-next" type="date"></div>
+              <button type="submit" class="btn btn-secondary btn-block">Add subscription</button>
+            </form>
+          </details>
+        </section>
+        <section class="block" aria-labelledby="bills-title">
+          <h3 id="bills-title">Bills and direct debits</h3>
+          <p id="bills-total" class="lead"></p>
+          <ul class="list" id="bills-list"></ul>
+          <details>
+            <summary>Add a bill yourself</summary>
+            <form id="bill-form" class="stack" novalidate>
+              <div class="field"><label for="bill-provider">Who to</label><input id="bill-provider" type="text" placeholder="For example: Octopus Energy"></div>
+              <div class="field"><label for="bill-kind">What for</label><select id="bill-kind">
+                <option value="energy">Energy</option><option value="water">Water</option><option value="council tax">Council tax</option>
+                <option value="broadband">Broadband</option><option value="mobile">Mobile</option><option value="insurance">Insurance</option>
+                <option value="tv licence">TV licence</option><option value="rent or mortgage">Rent or mortgage</option><option value="other">Other</option></select></div>
+              <div class="field"><label for="bill-amount">How much (£)</label><input id="bill-amount" type="number" step="0.01" min="0" inputmode="decimal"></div>
+              <div class="field"><label for="bill-period">How often</label><select id="bill-period"><option value="monthly">Every month</option><option value="quarterly">Every three months</option><option value="yearly">Every year</option></select></div>
+              <div class="field"><label for="bill-next">Next payment (if you know)</label><input id="bill-next" type="date"></div>
+              <button type="submit" class="btn btn-secondary btn-block">Add bill</button>
+            </form>
+          </details>
+        </section>
+        <section class="block" aria-labelledby="spend-title">
+          <h3 id="spend-title">Spending</h3>
+          <p id="spend-total" class="lead"></p>
+          <ul class="list compact" id="spend-changes"></ul>
+          <ul class="bars" id="spend-cats" aria-label="By category"></ul>
+          <p class="meta" id="spend-months"></p>
+        </section>
+      </div>
+
+      <div id="sec-projects" class="sec" hidden>
+        <form id="project-form" class="card stack" novalidate>
+          <div class="field">
+            <label for="project-name">Start a project</label>
+            <input id="project-name" type="text" autocomplete="off" placeholder="For example: Redecorate the hallway">
+          </div>
+          <div class="field">
+            <label for="project-details">What's involved? <span class="optional">(optional)</span></label>
+            <textarea id="project-details" rows="2" placeholder="For example: light grey walls, new skirting, keep the carpet"></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">Plan the steps</button>
+          <p class="hint">Life OS breaks it into steps in order. The next step also shows in your To-do list.</p>
+        </form>
+        <div id="project-cards" class="stack"></div>
+        <section class="block" aria-labelledby="trips-title">
+          <h2 id="trips-title">Trips and holidays</h2>
+          <ul class="list" id="trips-list"></ul>
+          <details class="card add-detail" id="trip-add">
+            <summary>Plan a trip</summary>
+            <form id="trip-form" class="stack" novalidate>
+              <div class="field"><label for="trip-dest">Where to?</label><input id="trip-dest" type="text" autocomplete="off" placeholder="For example: Cornwall"></div>
+              <div class="row two">
+                <div class="field"><label for="trip-start">Going</label><input id="trip-start" type="date"></div>
+                <div class="field"><label for="trip-end">Coming home</label><input id="trip-end" type="date"></div>
+              </div>
+              <div class="field"><label for="trip-travel">Getting there</label>
+                <select id="trip-travel"><option value="car">By car</option><option value="plane">Flying</option><option value="train">By train</option><option value="other">Other</option></select></div>
+              <div class="check-row"><input type="checkbox" id="trip-abroad"><label for="trip-abroad">Abroad</label></div>
+              <div class="check-row"><input type="checkbox" id="trip-kids" checked><label for="trip-kids">The children are coming</label></div>
+              <div class="check-row"><input type="checkbox" id="trip-pets"><label for="trip-pets">Pets need looking after</label></div>
+              <button type="submit" class="btn btn-primary btn-block">Make the plan</button>
+              <p class="hint">Makes a packing list in Google Tasks, the jobs to do before you go, and an "Away" entry in the calendar.</p>
+            </form>
+          </details>
+        </section>
+        <section class="block" aria-labelledby="parties-title">
+          <h2 id="parties-title">Birthday parties</h2>
+          <ul class="list" id="parties-list"></ul>
+          <details class="card add-detail" id="party-add">
+            <summary>Plan a party</summary>
+            <form id="party-form" class="stack" novalidate>
+              <div class="field"><label for="party-child">Whose party?</label><input id="party-child" type="text" autocomplete="off" list="party-kids"><datalist id="party-kids"></datalist></div>
+              <div class="row two">
+                <div class="field"><label for="party-age">Turning</label><input id="party-age" type="number" min="1" max="99" inputmode="numeric"></div>
+                <div class="field"><label for="party-date">Date</label><input id="party-date" type="date"></div>
+              </div>
+              <div class="row two">
+                <div class="field"><label for="party-start">Starts</label><input id="party-start" type="time"></div>
+                <div class="field"><label for="party-end">Ends</label><input id="party-end" type="time"></div>
+              </div>
+              <div class="field"><label for="party-venue">Where <span class="optional">(optional)</span></label><input id="party-venue" type="text" autocomplete="off" placeholder="For example: Jump Zone, or at home"></div>
+              <div class="field"><label for="party-theme">Theme <span class="optional">(optional)</span></label><input id="party-theme" type="text" autocomplete="off"></div>
+              <button type="submit" class="btn btn-primary btn-block">Make the plan</button>
+              <p class="hint">Makes the jobs before the party, a party-day checklist in Google Tasks and the calendar entry. Invites are made as Gmail drafts for you to send.</p>
+            </form>
+          </details>
+        </section>
+      </div>
+
+      <div id="sec-lists" class="sec" hidden>
+        <div class="field">
+          <label for="list-select">List</label>
+          <select id="list-select"></select>
+        </div>
+        <button type="button" class="btn btn-secondary btn-block" id="shop-mode" aria-pressed="false">Shopping mode: big ticks, screen stays on</button>
+        <form id="task-form" class="card stack" novalidate>
+          <div class="field">
+            <label for="task-title">Add to this list</label>
+            <input id="task-title" type="text" autocomplete="off" enterkeyhint="done" placeholder="For example: bin bags">
+          </div>
+          <div class="field">
+            <label for="task-due">Due date <span class="optional">(optional)</span></label>
+            <input id="task-due" type="date">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">Add</button>
+        </form>
+        <h2 id="list-heading" class="visually-hidden">Items</h2>
+        <ul class="list" id="task-list" aria-labelledby="list-heading"></ul>
+        <section class="block card stack" id="shop-order" aria-labelledby="shop-order-title" hidden>
+          <h2 id="shop-order-title">Order online</h2>
+          <div class="field">
+            <label for="shop-where">Your supermarket</label>
+            <select id="shop-where"></select>
+          </div>
+          <div id="shop-amazon"></div>
+          <div id="shop-other"></div>
+          <button type="button" class="btn btn-secondary btn-block" id="shop-copy">Copy the list</button>
+          <button type="button" class="btn btn-secondary btn-block" id="shop-all-done">I've ordered everything</button>
+          <p class="hint">Supermarkets don't let other apps fill your basket. Copy the list and paste it into your supermarket's list search (Sainsbury's SmartLists, Waitrose or Ocado), or use each item's link. Amazon items with a usual product go in with one tap.</p>
+        </section>
+      </div>
+
+      <div id="sec-meals" class="sec" hidden>
+        <section class="block" aria-labelledby="meals-title">
+          <h2 id="meals-title">This week's dinners</h2>
+          <form id="meals-form" class="card stack" novalidate>
+            <div id="meal-fields" class="stack"></div>
+            <datalist id="favourite-meals"></datalist>
+            <button class="btn btn-secondary btn-block" type="submit">Save dinners</button>
+            <button class="btn btn-primary btn-block" type="button" id="suggest-meals">Suggest dinners for the gaps</button>
+            <p id="suggest-result" class="meta" role="status" aria-live="polite"></p>
+            <button class="btn btn-secondary btn-block" type="button" id="plan-meals">Plan the week with the assistant</button>
+            <button class="btn btn-secondary btn-block" type="button" id="meals-shopping">Add this week's ingredients to Shopping</button>
+            <p id="meals-shopping-result" class="meta" role="status" aria-live="polite"></p>
+            <p class="hint">"Plan the week for me" asks the assistant to fill the gaps around busy evenings and add the ingredients to Shopping.</p>
+          </form>
+          <form id="recipe-form" class="card stack" novalidate>
+            <h3>Add a dinner from a recipe link</h3>
+            <div class="field"><label for="recipe-url">Recipe link</label>
+              <p class="hint" id="recipe-hint">Paste a link from BBC Good Food, Tesco, Jamie Oliver or most recipe sites. The ingredients go on Shopping (not things already in the cupboard).</p>
+              <input id="recipe-url" type="url" inputmode="url" autocomplete="off" aria-describedby="recipe-hint" placeholder="https://"></div>
+            <div class="field"><label for="recipe-day">Which day</label><select id="recipe-day"></select></div>
+            <button type="submit" class="btn btn-primary btn-block">Add it</button>
+            <p id="recipe-result" class="meta" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+
+      <div id="sec-renewals" class="sec" hidden>
+        <section class="block" aria-labelledby="cars-title">
+          <h2 id="cars-title">Cars</h2>
+          <p class="hint" id="cars-hint"></p>
+          <ul class="list compact" id="cars-list"></ul>
+          <form id="car-form" class="card stack" novalidate>
+            <div class="field"><label for="car-reg">Registration</label><input id="car-reg" type="text" autocomplete="off" autocapitalize="characters" placeholder="AB12 CDE"></div>
+            <div class="field"><label for="car-name">Name (optional)</label><input id="car-name" type="text" placeholder="For example: The Golf"></div>
+            <div id="car-dates" class="stack">
+              <div class="field"><label for="car-mot">MOT due</label><input id="car-mot" type="date"></div>
+              <div class="field"><label for="car-tax">Tax due</label><input id="car-tax" type="date"></div>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-block">Add car</button>
+          </form>
+        </section>
+        <section class="block" aria-labelledby="renewals-title">
+          <h2 id="renewals-title">Renewals</h2>
+          <p class="hint">Insurance, MOT, contracts, passports. You get a task and a notification 6 weeks before each date.</p>
+          <ul class="list compact" id="renewals-list"></ul>
+          <form id="renewal-form" class="card stack" novalidate>
+            <div class="field">
+              <label for="renewal-name">What renews?</label>
+              <input id="renewal-name" type="text" autocomplete="off" placeholder="For example: Car insurance">
+            </div>
+            <div class="field">
+              <label for="renewal-date">Renewal or expiry date</label>
+              <input id="renewal-date" type="date">
+            </div>
+            <div class="check-row"><input type="checkbox" id="renewal-yearly" checked><label for="renewal-yearly">Renews every year</label></div>
+            <button class="btn btn-secondary btn-block" type="submit">Add renewal</button>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <!-- Home -->
+    <section id="view-home" class="view" aria-labelledby="home-title" hidden>
+      <h1 id="home-title">Home</h1>
+      <p id="home-warning" class="notice" hidden></p>
+      <section class="block" aria-labelledby="actions-title">
+        <h2 id="actions-title">One-tap actions</h2>
+        <div class="action-grid" id="action-grid"></div>
+      </section>
+      <section class="block card stack" id="energy-block" aria-labelledby="energy-title" hidden>
+        <h2 id="energy-title">Cheapest time to run</h2>
+        <p id="energy-now" class="meta"></p>
+        <ul class="list" id="energy-list"></ul>
+      </section>
+      <section class="block card stack" id="report-block" aria-labelledby="report-title" hidden>
+        <h2 id="report-title">Energy this week</h2>
+        <ul class="list compact" id="report-list"></ul>
+        <p id="report-tip"></p>
+      </section>
+      <section class="block card stack" aria-labelledby="leaving-title">
+        <h2 id="leaving-title">Leaving home check</h2>
+        <p class="hint">Shows anything open, on or unlocked, with a button to sort each one. Nothing is ever unlocked or opened from here.</p>
+        <button type="button" class="btn btn-primary btn-block" id="leaving-check">Check before I go</button>
+        <div id="leaving-result" role="status" aria-live="polite"></div>
+      </section>
+      <section class="block" aria-labelledby="kids-title" id="kids-block" hidden>
+        <h2 id="kids-title">Chores and pocket money</h2>
+        <div id="kids"></div>
+      </section>
+      <section class="block card stack" id="seasonal-block" aria-labelledby="seasonal-title" hidden>
+        <h2 id="seasonal-title">Seasonal jobs</h2>
+        <p class="meta" id="seasonal-month"></p>
+        <ul class="list compact" id="seasonal-now"></ul>
+        <p class="hint" id="seasonal-next"></p>
+        <details>
+          <summary>What the house has</summary>
+          <p class="hint">Jobs for things you don't have (a chimney, a garden) aren't suggested.</p>
+          <div id="seasonal-things" class="stack"></div>
+        </details>
+      </section>
+      <section class="block" aria-labelledby="manual-title">
+        <h2 id="manual-title">Home manual</h2>
+        <p class="hint">Where things are and how they work, for anyone in the house. Gemini can read it out ("Hey Google, what's on my Home manual list?") and it shows on the kitchen display, except private entries.</p>
+        <ul class="list" id="manual-list"></ul>
+        <div class="chip-row" id="manual-starters"></div>
+        <details class="card add-detail" id="manual-add">
+          <summary>Add to the manual</summary>
+          <form id="manual-form" class="stack" novalidate>
+            <input type="hidden" id="manual-id">
+            <div class="field"><label for="manual-section">Section</label><select id="manual-section"></select></div>
+            <div class="field"><label for="manual-name">What it is</label><input id="manual-name" type="text" autocomplete="off" placeholder="For example: Stopcock"></div>
+            <div class="field"><label for="manual-details">Where it is, or what to do</label><textarea id="manual-details" rows="3" placeholder="Under the kitchen sink, behind the bleach. Turn clockwise to close."></textarea></div>
+            <div class="check-row"><input type="checkbox" id="manual-private"><label for="manual-private">Private: keep it off the kitchen display and Google</label></div>
+            <button type="submit" class="btn btn-secondary btn-block">Save</button>
+          </form>
+        </details>
+      </section>
+      <section class="block" aria-labelledby="gifts-title">
+        <h2 id="gifts-title">People and presents</h2>
+        <p class="hint">Likes, sizes and wish lists, so presents get sorted early and nobody gets the same thing twice.</p>
+        <ul class="list" id="gifts-list"></ul>
+        <details class="card add-detail" id="gift-add">
+          <summary>Add someone</summary>
+          <form id="gift-form" class="stack" novalidate>
+            <div class="field"><label for="gift-name">Name</label><input id="gift-name" type="text" autocomplete="off" placeholder="For example: Mum"></div>
+            <div class="field"><label for="gift-relation">Who they are (optional)</label><input id="gift-relation" type="text" placeholder="Joe's mum"></div>
+            <div class="field"><label for="gift-birthday">Birthday</label><input id="gift-birthday" type="date"></div>
+            <div class="field"><label for="gift-likes">Likes</label><input id="gift-likes" type="text" placeholder="Gardening, crime novels, gin"></div>
+            <div class="field"><label for="gift-sizes">Sizes</label><input id="gift-sizes" type="text" placeholder="Medium top, size 6 shoes"></div>
+            <div class="field"><label for="gift-wishlist">Wish list (one per line, links welcome)</label><textarea id="gift-wishlist" rows="3"></textarea></div>
+            <button type="submit" class="btn btn-secondary btn-block">Save</button>
+          </form>
+        </details>
+      </section>
+      <section class="block" aria-labelledby="ct-title">
+        <h2 id="ct-title">Trades and contacts</h2>
+        <p class="hint">Your go-to electrician, plumber, gas engineer and so on. Life OS asks them first, and saves anyone new you use.</p>
+        <ul class="list compact" id="ct-list"></ul>
+        <details class="card add-detail">
+          <summary>Add a tradesperson</summary>
+          <form id="ct-form" class="stack" novalidate>
+            <div class="field"><label for="ct-name">Name</label><input id="ct-name" type="text" autocomplete="off" placeholder="For example: Dave Hughes"></div>
+            <div class="field"><label for="ct-company">Company <span class="optional">(optional)</span></label><input id="ct-company" type="text" autocomplete="off"></div>
+            <div class="field"><label for="ct-trade">Trade</label><input id="ct-trade" type="text" list="ct-trades" autocomplete="off" placeholder="For example: electrician"></div>
+            <datalist id="ct-trades"><option value="electrician"><option value="plumber"><option value="gas engineer"><option value="roofer"><option value="locksmith"><option value="carpenter"><option value="decorator"><option value="gardener"><option value="window cleaner"><option value="cleaner"><option value="appliance repair"><option value="handyman"><option value="dentist"><option value="GP surgery"><option value="vet"><option value="garage"><option value="family (childcare)"><option value="childminder"><option value="babysitter"></datalist>
+            <div class="field"><label for="ct-email">Email</label><input id="ct-email" type="email" autocomplete="off"></div>
+            <div class="field"><label for="ct-phone">Phone</label><input id="ct-phone" type="tel" autocomplete="off"></div>
+            <div class="check-row"><input type="checkbox" id="ct-fav"><label for="ct-fav">Our go-to for this trade</label></div>
+            <button class="btn btn-secondary btn-block" type="submit">Save tradesperson</button>
+          </form>
+        </details>
+      </section>
+      <section class="block" aria-labelledby="hd-title">
+        <h2 id="hd-title">Home details</h2>
+        <p class="hint">What's in the house: bulb fittings, appliance models, sizes, who likes what. Life OS uses this to suggest the right thing, and adds to it when you answer a question or order something.</p>
+        <ul class="list compact" id="hd-list"></ul>
+        <details class="card add-detail">
+          <summary>Add a home detail</summary>
+          <form id="hd-form" class="stack" novalidate>
+            <div class="field"><label for="hd-area">Where</label><input id="hd-area" type="text" list="hd-areas" autocomplete="off" placeholder="For example: Landing"></div>
+            <datalist id="hd-areas"></datalist>
+            <div class="field"><label for="hd-item">What</label><input id="hd-item" type="text" autocomplete="off" placeholder="For example: Ceiling light"></div>
+            <div class="field"><label for="hd-details">Details</label><textarea id="hd-details" rows="2" placeholder="For example: B22 bayonet, 8.5W LED, warm white"></textarea></div>
+            <button class="btn btn-secondary btn-block" type="submit">Save</button>
+          </form>
+        </details>
+      </section>
+      <section class="block" aria-labelledby="status-title">
+        <h2 id="status-title">House status</h2>
+        <ul class="list compact" id="status-list"></ul>
+      </section>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view" aria-labelledby="settings-title" hidden>
+      <h1 id="settings-title">Settings</h1>
+      <section class="block notice" id="setup-problems" aria-labelledby="setup-title" hidden>
+        <h2 id="setup-title">Setup needs attention</h2>
+        <ul id="setup-list"></ul>
+      </section>
+
+      <section class="block card stack" aria-labelledby="ai-title">
+        <h2 id="ai-title">Assistant</h2>
+        <fieldset>
+          <legend>Which AI runs Life OS? Only one is used at a time.</legend>
+          <div class="radio-row">
+            <input type="radio" name="ai" id="ai-claude" value="claude"><label for="ai-claude">Claude</label>
+          </div>
+          <div class="radio-row">
+            <input type="radio" name="ai" id="ai-gemini" value="gemini"><label for="ai-gemini">Gemini</label>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="block card stack" id="setup-all" aria-labelledby="setup-all-title">
+        <h2 id="setup-all-title">Getting set up</h2>
+        <p id="setup-all-count" class="meta"></p>
+        <div id="setup-all-groups" class="stack"></div>
+      </section>
+
+      <section class="block card stack" id="check" aria-labelledby="check-title">
+        <h2 id="check-title">Check everything</h2>
+        <p class="hint">Tests every connection (Google, Home Assistant, the assistant, notifications, speakers, backups) and says what to fix.</p>
+        <div class="check-row"><input type="checkbox" id="check-ai"><label for="check-ai">Include a tiny test message to the assistant (costs a fraction of a penny)</label></div>
+        <button type="button" class="btn btn-primary btn-block" id="check-run">Check everything</button>
+        <p id="check-summary" role="status" aria-live="polite"></p>
+        <ul class="list compact" id="check-results"></ul>
+      </section>
+
+      <section class="block card stack" id="backups" aria-labelledby="backups-title">
+        <h2 id="backups-title">Backups</h2>
+        <p class="hint">Every night at 2:40am an encrypted copy of Life OS goes to a folder off this computer's own disk: a USB stick, or a folder that Google Drive, iCloud Drive or OneDrive keeps in sync. Each copy is opened again and checked.</p>
+        <p id="backup-status" role="status" aria-live="polite"></p>
+        <form id="backup-form" class="stack" novalidate>
+          <div class="field"><label for="backup-folder">Folder to copy to</label>
+            <p class="hint" id="backup-folder-hint">For example /Volumes/USB STICK or ~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/Life OS</p>
+            <input id="backup-folder" type="text" autocomplete="off" aria-describedby="backup-folder-hint"></div>
+          <div class="field"><label for="backup-pass">Backup passphrase</label>
+            <p class="hint" id="backup-pass-hint">At least 10 characters, like three random words. Write it down somewhere safe, not on this computer: without it the backups can't be opened. Leave blank to keep the one you set.</p>
+            <input id="backup-pass" type="password" autocomplete="new-password" aria-describedby="backup-pass-hint"></div>
+          <button type="submit" class="btn btn-secondary btn-block">Save</button>
+        </form>
+        <button type="button" class="btn btn-primary btn-block" id="backup-now">Back up now</button>
+        <details>
+          <summary>Restore from a backup</summary>
+          <form id="restore-form" class="stack" novalidate>
+            <p class="hint">Replaces everything in Life OS with the backup when it next starts. What's here now is kept in a "before-restore" folder, not deleted.</p>
+            <div class="field"><label for="restore-file">Backup file</label><input id="restore-file" type="file" accept=".lifeos-backup"></div>
+            <div class="field"><label for="restore-pass">Its passphrase</label><input id="restore-pass" type="password" autocomplete="off"></div>
+            <button type="submit" class="btn btn-danger btn-block">Check it and restore</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="block card stack" id="computer" aria-labelledby="computer-title">
+        <h2 id="computer-title">Updates and this computer</h2>
+        <p id="sys-version"></p>
+        <div id="sys-update" role="status" aria-live="polite"></div>
+        <div class="check-row"><input type="checkbox" id="sys-auto"><label for="sys-auto">Install updates overnight by themselves</label></div>
+        <div class="field">
+          <label for="sys-file">Install an update file</label>
+          <p class="hint" id="sys-file-hint">Got an update file, like lifeos-update-0.17.0.zip? Choose it here. Your settings and history are kept, and if it doesn't start properly Life OS goes back by itself.</p>
+          <input type="file" id="sys-file" accept=".zip,application/zip" aria-describedby="sys-file-hint">
+        </div>
+        <div class="check-row" id="sys-autostart-row" hidden><input type="checkbox" id="sys-autostart"><label for="sys-autostart">Start Life OS when this computer starts</label></div>
+        <details id="sys-keys">
+          <summary>Keys and addresses</summary>
+          <form id="sys-keys-form" class="stack" novalidate>
+            <p class="hint">Only fill in what you want to change. Keys are never shown again once saved. Life OS restarts to use them.</p>
+            <div class="field"><label for="k-anthropic">Claude API key</label><p class="hint" id="k-anthropic-state"></p><input id="k-anthropic" type="password" autocomplete="off" aria-describedby="k-anthropic-state"></div>
+            <div class="field"><label for="k-gemini">Gemini API key</label><p class="hint" id="k-gemini-state"></p><input id="k-gemini" type="password" autocomplete="off" aria-describedby="k-gemini-state"></div>
+            <div class="field"><label for="k-url">Address for phones (https)</label><p class="hint" id="k-url-state"></p><input id="k-url" type="url" inputmode="url" aria-describedby="k-url-state" placeholder="https://lifeos.tail1234.ts.net"></div>
+            <div class="field"><label for="k-ha-url">Home Assistant address</label><input id="k-ha-url" type="url" placeholder="http://homeassistant.local:8123"></div>
+            <div class="field"><label for="k-ha-token">Home Assistant token</label><p class="hint" id="k-ha-state"></p><input id="k-ha-token" type="password" autocomplete="off" aria-describedby="k-ha-state"></div>
+            <div class="field"><label for="k-dvla">DVLA vehicle enquiry API key</label><p class="hint" id="k-dvla-state">For MOT and tax dates from your car's registration (free from the DVLA).</p><input id="k-dvla" type="password" autocomplete="off" aria-describedby="k-dvla-state"></div>
+            <div class="field"><label for="k-octopus">Octopus Energy tariff code</label><p class="hint" id="k-octopus-hint">Only if you're with Octopus on Agile or Go, for the cheapest times to run appliances. For example: E-1R-AGILE-24-10-01-C</p><input id="k-octopus" type="text" autocomplete="off" aria-describedby="k-octopus-hint"></div>
+            <button type="submit" class="btn btn-primary btn-block">Save and restart</button>
+          </form>
+        </details>
+        <p class="meta" id="sys-home"></p>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="sys-restart">Restart Life OS</button>
+          <button type="button" class="btn btn-danger" id="sys-quit" hidden>Quit Life OS</button>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="sys-leave-demo" hidden>Set up Life OS for our household</button>
+      </section>
+
+      <section class="block card stack" id="voice" aria-labelledby="voice-title">
+        <h2 id="voice-title">Voice and speakers</h2>
+        <p class="hint">Google speakers can't pass what you say straight to Life OS (Google stopped that for all apps in 2023), so they go through Home Assistant: fixed phrases answered out loud, and announcements. For saying anything at all, use Home Assistant's own voice assistant: "ask Life OS to move the dentist to Friday". Things Gemini adds to Google Tasks come into Life OS too, and shopping ones go on the Shopping list.</p>
+        <p id="voice-ha" class="notice" hidden>Connect Home Assistant first (Keys and addresses, above). Its Google Cast integration finds your Google speakers.</p>
+        <div class="field">
+          <label for="voice-speaker">Speaker Life OS talks on</label>
+          <select id="voice-speaker"><option value="">Choose a speaker</option></select>
+        </div>
+        <div class="field">
+          <label for="voice-tts">Voice (Home Assistant text-to-speech entity, optional)</label>
+          <p class="hint" id="voice-tts-hint">For example tts.home_assistant_cloud or tts.google_translate_en_com. Blank uses Google Translate's voice.</p>
+          <input id="voice-tts" type="text" autocomplete="off" aria-describedby="voice-tts-hint">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="voice-save">Save</button>
+          <button type="button" class="btn btn-secondary" id="voice-test">Say something</button>
+        </div>
+        <details>
+          <summary>Phrases for your Google speakers</summary>
+          <p class="hint">In the Google Home app: Automations, add, Household. Starter: "When I say to my assistant" and the phrase. Action: Adjust home devices, Scenes, then the Life OS scene. One routine per phrase you want.</p>
+          <ul class="list compact" id="voice-routines"></ul>
+        </details>
+        <details>
+          <summary>Set up Home Assistant (copy and paste)</summary>
+          <div class="field"><label for="voice-package">1. Save as packages/lifeos_voice.yaml</label><textarea id="voice-package" rows="8" readonly></textarea></div>
+          <button type="button" class="btn btn-secondary btn-block" data-copy="voice-package">Copy</button>
+          <div class="field"><label for="voice-sentences">2. Save as custom_sentences/en/lifeos.yaml</label><textarea id="voice-sentences" rows="6" readonly></textarea></div>
+          <button type="button" class="btn btn-secondary btn-block" data-copy="voice-sentences">Copy</button>
+          <p class="hint">Then restart Home Assistant and expose the "Life OS ..." buttons to Google Home (Settings, Voice assistants, Expose).</p>
+          <div class="field"><label for="voice-sentences-all">Or, for a speaker used only for Life OS (a Home Assistant Voice speaker, or a Nest Mini with a replacement board): everything you say goes to Life OS. Use this instead of file 2.</label><textarea id="voice-sentences-all" rows="6" readonly></textarea></div>
+          <button type="button" class="btn btn-secondary btn-block" data-copy="voice-sentences-all">Copy</button>
+        </details>
+      </section>
+
+      <section class="block card stack" id="notify" aria-labelledby="notify-title">
+        <h2 id="notify-title">Notifications</h2>
+        <p class="hint">Get the morning brief, renewals and Approve / Reject requests on this phone. You can approve straight from the notification.</p>
+        <p id="notify-status" class="meta"></p>
+        <button class="btn btn-primary btn-block" type="button" id="notify-on">Turn on notifications</button>
+        <button class="btn btn-secondary btn-block" type="button" id="notify-test" hidden>Send a test notification</button>
+        <button class="btn btn-danger btn-block" type="button" id="notify-off" hidden>Turn off on this phone</button>
+      </section>
+
+      <section class="block card stack" id="google" aria-labelledby="google-title">
+        <h2 id="google-title">Google accounts</h2>
+        <p class="hint">Each person connects their own account, ideally on their own phone. Calendars are combined. Email access is optional and only ever drafts; nothing is sent without a tap.</p>
+        <ol class="checklist" id="google-checklist" aria-label="Google connection checklist"></ol>
+        <div id="accounts"></div>
+      </section>
+
+      <section class="block card stack" id="bridge" aria-labelledby="gemini-title">
+        <h2 id="gemini-title">Gemini and Google apps</h2>
+        <p class="hint">Say "Hey Google, add ... to my to-dos" and Life OS picks it up. It checks every 5 minutes for new to-dos, emails sent from your Gmail drafts, and things ticked off in Gemini or Google Tasks.</p>
+        <p id="gemini-status" role="status"></p>
+        <ul class="list compact" id="gemini-recent" aria-label="What it did recently"></ul>
+        <button type="button" class="btn btn-secondary" id="gemini-run">Check now</button>
+      </section>
+
+      <section class="block card stack" aria-labelledby="display-title">
+        <h2 id="display-title">Display and reading</h2>
+        <fieldset>
+          <legend>Text size</legend>
+          <div class="radio-row"><input type="radio" name="textsize" id="ts-normal" value="normal"><label for="ts-normal">Normal</label></div>
+          <div class="radio-row"><input type="radio" name="textsize" id="ts-large" value="large"><label for="ts-large">Large</label></div>
+          <div class="radio-row"><input type="radio" name="textsize" id="ts-xl" value="xl"><label for="ts-xl">Extra large</label></div>
+        </fieldset>
+        <div class="check-row"><input type="checkbox" id="opt-contrast"><label for="opt-contrast">High contrast</label></div>
+        <div class="check-row"><input type="checkbox" id="opt-speak"><label for="opt-speak">Read replies aloud</label></div>
+      </section>
+
+      <section class="block card stack" aria-labelledby="wall-title">
+        <h2 id="wall-title">Kitchen display</h2>
+        <p class="hint">Turn a spare tablet into a wall display: clock, today's calendar, dinner, chores and what's coming up. It can only show things, never change them.</p>
+        <a class="btn btn-secondary btn-block" href="wall.html">Open the kitchen display</a>
+        <p class="hint">Kids' chores on the tablet: the children tick their own chores (they can't pay themselves or change anything else). On the tablet, open the kitchen display and tap <strong>Chores</strong>, then type the household key once.</p>
+        <a class="btn btn-secondary btn-block" href="kids.html">Open kids' chores</a>
+      </section>
+
+      <section class="block card stack" id="install" aria-labelledby="install-title">
+        <h2 id="install-title">Install on this phone</h2>
+        <p class="hint" id="install-hint">In Chrome, tap the menu (three dots), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+        <button class="btn btn-secondary btn-block" type="button" id="install-btn" hidden>Install Life OS</button>
+      </section>
+
+      <section class="block card stack" aria-labelledby="account-title">
+        <h2 id="account-title">This phone</h2>
+        <p id="signed-in-as"></p>
+        <p class="meta" id="app-version"></p>
+        <button class="btn btn-secondary btn-block" type="button" id="logout-btn">Sign out</button>
+      </section>
+    </section>
+  </main>
+
+  <button type="button" class="fab" id="fab-add" aria-haspopup="dialog" aria-label="Add a job" hidden>
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add</span>
+  </button>
+
+  <nav class="tabbar" id="tabbar" aria-label="Main" hidden>
+    <a href="#today" data-tab="today"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Today</span></a>
+    <a href="#ask" data-tab="ask"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4.5 5.5h15v10h-8l-4.5 4v-4H4.5z"/></svg><span>Ask</span></a>
+    <a href="#tasks" data-tab="tasks"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 7 1.8 1.8L9 5.5M4 13l1.8 1.8L9 11.5M4 19l1.8 1.8L9 17.5M12 7h8M12 13h8M12 19h8"/></svg><span>To-do</span></a>
+    <a href="#home" data-tab="home"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg><span>Home</span></a>
+    <a href="#settings" data-tab="settings"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Settings</span></a>
+  </nav>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

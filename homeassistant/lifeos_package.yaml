@@ -1,0 +1,76 @@
+# Home Assistant side of Life OS. Put this file in /config/packages/ and add
+#   homeassistant:
+#     packages: !include_dir_named packages
+# to configuration.yaml. Add to secrets.yaml:
+#   lifeos_key: <same as LIFEOS_API_KEY>
+# Replace lifeos.local below with the address of the machine running Life OS.
+
+rest_command:
+  lifeos_nfc:
+    url: "http://lifeos.local:8800/nfc/{{ tag }}?who={{ who | urlencode }}"
+    method: POST
+    headers:
+      X-LifeOS-Key: !secret lifeos_key
+  lifeos_ask:
+    url: "http://lifeos.local:8800/ask"
+    method: POST
+    headers:
+      X-LifeOS-Key: !secret lifeos_key
+    content_type: application/json
+    payload: '{"text": {{ text | tojson }}}'
+    timeout: 120
+
+automation:
+  # Every NFC tag scanned with the Home Assistant phone app goes to Life OS.
+  # Name each tag in Settings > Tags with the same ID used in config/settings.yaml.
+  - alias: "Life OS: forward NFC tag scans"
+    mode: queued
+    trigger:
+      - platform: event
+        event_type: tag_scanned
+    action:
+      - service: rest_command.lifeos_nfc
+        data:
+          tag: "{{ trigger.event.data.tag_id }}"
+          who: "{{ states.person | selectattr('attributes.user_id', 'eq', trigger.event.context.user_id) | map(attribute='attributes.friendly_name') | first | default('someone') }}"
+
+  # Washer done: power drops below 5 W for 3 minutes after running.
+  - alias: "Life OS: washer finished"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.washer_plug_power
+        below: 5
+        for: "00:03:00"
+    condition:
+      - condition: template
+        value_template: "{{ trigger.from_state.state | float(0) > 5 }}"
+    action:
+      - service: notify.notify
+        data:
+          message: "Washer done - please move the load."
+      - service: tts.speak
+        target:
+          entity_id: tts.google_translate_en_com
+        data:
+          media_player_entity_id: media_player.kitchen_speaker
+          message: "The washing machine has finished."
+
+  # Bin night: the evening before collection, light the porch amber until the bin tag is tapped.
+  - alias: "Life OS: bin night"
+    trigger:
+      - platform: time
+        at: "19:00:00"
+    condition:
+      - condition: template
+        value_template: >
+          {{ state_attr('calendar.bins', 'start_time') is not none and
+             (as_datetime(state_attr('calendar.bins', 'start_time')).date() - now().date()).days == 1 }}
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.porch
+        data:
+          rgb_color: [255, 140, 0]
+      - service: notify.notify
+        data:
+          message: "Bins go out tonight. Tap the bin tag when done."

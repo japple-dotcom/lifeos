@@ -1,0 +1,31 @@
+# What's new
+
+## 0.17.0
+Settings > Check everything tests every connection from the app and says what to fix. Nightly encrypted backups to
+a USB stick or a synced folder (Google Drive, iCloud Drive, OneDrive), each one opened again and checked, with
+restore from Settings. Kids' chores on the kitchen tablet (they tick, grown-ups pay). Ask for a better price when a
+bill or renewal goes up: a call script, an email in your Gmail drafts and where to compare. Away mode for trips
+(heating down, lights at dusk, an evening house check, heating back up for your return). Add a dinner from a recipe
+link. Seasonal house jobs each month. A Sunday agenda for the two of you. A birthday party planner with invites as
+Gmail drafts and replies read for you. Voice: an option to send everything a dedicated speaker hears to Life OS.
+
+## 0.16.0
+Life OS talks: answers and announcements on your Google speakers through Home Assistant (Google closed voice apps
+on its speakers in 2023, so fixed phrases go through Google Home routines), anything at all through Home
+Assistant Assist ("ask Life OS to..."), and an Ask button on the kitchen display. Things Gemini adds to your
+to-dos that are shopping go straight to Shopping. New: a "Getting set up" checklist, bills and direct debits with
+a warning when one goes up, trips with packing lists and an Away entry, photos and PDFs kept with renewals, the
+home manual, bills and trips, the school run, weekly pocket money and saving goals, the weekly energy and heating
+report, and a weekly life admin hour. Fixed: a rare mix-up when several screens loaded at once, and number boxes
+that weren't styled.
+
+## 0.15.0
+Life OS is now an app: it opens a setup page the first time, keeps your data apart from the app, and updates
+itself from Settings (or an update file) with automatic roll-back. New: subscriptions and monthly spending,
+MOT and tax from your car's registration, school holidays and childcare gaps, appliance care from real use,
+the cheapest time to run appliances (Octopus), dinners that learn what you like, gift memory, a home manual
+Gemini can read, and visits that say who'll be in.
+
+## 0.14.0
+Predictions of what you'll need, ordering the shopping online, receipts and school emails, quotes from several
+firms, the Sunday look ahead, the leaving home check, sharing into Life OS, and working offline.

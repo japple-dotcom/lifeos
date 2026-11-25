@@ -1,0 +1,66 @@
+/* Kitchen wall display: readable from across the room, dark so it isn't a bright light in the evening. */
+html.wall {
+  --bg: #101214; --surface: #181b1e; --text: #f4f3ef; --muted: #b9bec3; --border: #30353a;
+  --accent: #7fd8ca; --on-accent: #0b1f1c; --danger: #ff9b8f;
+  font-size: clamp(16px, 1.6vw, 28px);
+}
+html.wall body { padding: 0; background: var(--bg); color: var(--text); }
+html.wall main { max-width: none; padding: 2vh 2.5vw; min-height: 100dvh; }
+.wall-grid { display: grid; grid-template-columns: 1.1fr 1.2fr 1fr; gap: 2vw; min-height: 92dvh; }
+.wall-grid[hidden] { display: none; }
+@media (max-aspect-ratio: 1/1) { .wall-grid { grid-template-columns: 1fr; } html.wall { font-size: clamp(16px, 3.2vw, 30px); } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 1.4rem 1.6rem; overflow: hidden; }
+.panel h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.6rem; }
+.panel h2.spaced { margin-top: 1.6rem; }
+.clock { font-size: 5.2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.date { font-size: 1.5rem; margin-top: 0.4rem; color: var(--muted); }
+.weather { font-size: 1.5rem; margin-top: 1rem; }
+.alert { margin-top: 1.2rem; padding: 0.7rem 1rem; border-radius: 14px; background: #3a2f12; border: 1px solid #e5b04b; font-weight: 650; }
+.brief { margin-top: 1.4rem; white-space: pre-wrap; line-height: 1.45; color: var(--text); font-size: 1.05rem;
+  border-left: 5px solid var(--accent); padding-left: 0.9rem; }
+.wlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.wlist li { display: grid; grid-template-columns: 5.6rem 1fr; gap: 0.8rem; align-items: baseline; font-size: 1.2rem; }
+.wlist li.plain { grid-template-columns: 1fr auto; }
+.wlist .t { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.wlist .who { color: var(--muted); font-size: 0.9rem; display: block; }
+.wlist .empty { color: var(--muted); display: block; }
+.dinner { font-size: 2.1rem; font-weight: 700; line-height: 1.15; margin: 0; }
+.sub { color: var(--muted); font-size: 1.1rem; margin-top: 0.5rem; }
+.updated { position: fixed; right: 2.5vw; bottom: 1vh; color: var(--muted); font-size: 0.75rem; margin: 0; }
+.wall-login { max-width: 32rem; margin: 10vh auto; }
+.wall-login h1 { font-size: 2rem; }
+.past, .past .t, .past .who { color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .wall-grid { transition: opacity .4s; } }
+
+/* v0.16: ask the display (read-only answers, spoken) */
+.ask { margin-top: 1rem; display: grid; gap: 0.5rem; }
+.ask-btn { font: inherit; font-size: 1.2rem; font-weight: 700; min-height: 3.2rem; border-radius: 999px; border: 2px solid currentColor;
+  background: transparent; color: inherit; padding: 0 1.4rem; justify-self: start; cursor: pointer; }
+.ask input { font: inherit; font-size: 1.2rem; width: 100%; min-height: 3rem; border-radius: 12px; padding: 0 0.8rem; }
+.ask-answer { font-size: 1.3rem; margin: 0; }
+#w-kids li.goal { font-size: 0.9em; }
+#w-kids li.goal progress { grid-column: 1 / -1; width: 100%; height: 0.6rem; accent-color: currentColor; }
+
+/* Kids' chores page (kids.html): big, friendly buttons */
+.kids-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.kids-top h1 { margin: 0; font-size: 1.8rem; }
+.kids-top a.ask-btn { text-decoration: none; display: inline-flex; align-items: center; padding: 0 1.2rem; color: var(--accent); }
+.kids-tabs { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.kid-tab { font: inherit; font-size: 1.4rem; font-weight: 800; min-height: 3.4rem; padding: 0 1.6rem; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--border); background: var(--surface); color: var(--text); }
+.kid-tab[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.kid-chores { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; margin: 1rem 0; }
+.kid-chore { font: inherit; font-size: 1.3rem; font-weight: 700; min-height: 6rem; border-radius: 20px; cursor: pointer;
+  border: 2px solid var(--accent); background: transparent; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; }
+.kid-chore small { color: var(--accent); font-size: 1rem; }
+.kid-chore:disabled { opacity: 0.5; }
+.kid-chore:focus-visible, .kid-tab:focus-visible { outline: 4px solid var(--text); outline-offset: 3px; }
+.kid-goal { display: grid; gap: 0.3rem; margin-bottom: 0.8rem; }
+.kid-goal progress { width: 100%; height: 1rem; accent-color: var(--accent); }
+.ask-btn.small { font-size: 0.9rem; min-height: 2.75rem; padding: 0 0.9rem; }
+.kids-cheer { position: fixed; left: 50%; bottom: 4vh; transform: translateX(-50%); background: var(--accent); color: var(--on-accent);
+  font-size: 1.5rem; font-weight: 800; padding: 0.8rem 1.6rem; border-radius: 999px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.kids-cheer.show { opacity: 1; }
+.kids-cheer.sad { background: var(--danger); }
+@media (prefers-reduced-motion: reduce) { .kids-cheer { transition: none; } }
+.chores-link { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.2rem; margin-top: 0.6rem; color: var(--accent); }

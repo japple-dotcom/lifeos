@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en-GB" class="wall">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Life OS · Kitchen display</title>
+  <meta name="theme-color" content="#101214">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="wall.css">
+</head>
+<body>
+  <main id="main">
+    <!-- One-time sign-in for this tablet (read-only) -->
+    <section id="wall-login" class="wall-login" aria-labelledby="wl-title" hidden>
+      <h1 id="wl-title">Kitchen display</h1>
+      <p class="lead">This tablet will show today's calendar, dinner, chores and reminders. It can't change anything.</p>
+      <form id="wall-form" class="card stack" novalidate>
+        <div class="field">
+          <label for="wall-key">Household key</label>
+          <input id="wall-key" type="password" autocomplete="current-password" aria-describedby="wall-error">
+        </div>
+        <p id="wall-error" class="error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit">Start display</button>
+      </form>
+    </section>
+
+    <div id="wall" class="wall-grid" hidden>
+      <h1 class="visually-hidden">Kitchen display</h1>
+      <section class="panel now" aria-label="Time and weather">
+        <div class="clock" id="clock" aria-hidden="true"></div>
+        <div class="date" id="date"></div>
+        <div class="weather" id="weather" hidden></div>
+        <div class="alert" id="pending" hidden></div>
+        <div class="brief" id="brief" hidden></div>
+        <div class="ask">
+          <button type="button" class="ask-btn" id="ask-btn">Ask</button>
+          <form id="ask-form" hidden><label for="ask-text" class="visually-hidden">Ask the kitchen display</label>
+            <input id="ask-text" type="text" placeholder="What's for dinner?" autocomplete="off"></form>
+          <p class="ask-answer" id="ask-answer" role="status" aria-live="polite"></p>
+          <a class="ask-btn chores-link" href="kids.html">Chores</a>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="w-cal">
+        <h2 id="w-cal">Today</h2>
+        <ul class="wlist" id="w-today"></ul>
+        <h2 id="w-tom" class="spaced">Tomorrow</h2>
+        <ul class="wlist" id="w-tomorrow"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="w-din">
+        <h2 id="w-din">Dinner</h2>
+        <p class="dinner" id="w-dinner"></p>
+        <p class="sub" id="w-dinner-tomorrow"></p>
+        <div id="w-kids-block" hidden>
+          <h2 class="spaced" id="w-kids-title">Chores this week</h2>
+          <ul class="wlist" id="w-kids" aria-labelledby="w-kids-title"></ul>
+        </div>
+        <div id="w-ren-block" hidden>
+          <h2 class="spaced" id="w-ren-title">Coming up</h2>
+          <ul class="wlist" id="w-renewals" aria-labelledby="w-ren-title"></ul>
+        </div>
+        <div id="w-manual-block" hidden>
+          <h2 class="spaced" id="w-manual-title">Good to know</h2>
+          <ul class="wlist" id="w-manual" aria-labelledby="w-manual-title"></ul>
+        </div>
+      </section>
+    </div>
+    <p class="updated" id="updated" aria-live="polite"></p>
+  </main>
+  <script src="wall.js" defer></script>
+</body>
+</html>
