@@ -89,7 +89,8 @@ def _context(svc) -> str:
             f"Active projects: {projects}\n")
 
 
-def _ask_ai_for_tool(svc, agent, tool: dict, system: str, prompt: str, web_search: bool = False) -> dict | None:
+def _ask_ai_for_tool(svc, agent, tool: dict, system: str, prompt: str, web_search: bool = False,
+                     image: tuple[bytes, str] | None = None) -> dict | None:
     """Runs one small AI request that must answer by calling `tool`. Returns its arguments, or None."""
     if agent is None or getattr(agent, "provider", None) is None:
         return None
@@ -108,6 +109,8 @@ def _ask_ai_for_tool(svc, agent, tool: dict, system: str, prompt: str, web_searc
     try:
         if web_search:
             agent.provider.chat(system, [tool], prompt, on_tool, web_search=True)
+        elif image:
+            agent.provider.chat(system, [tool], prompt, on_tool, image=image)
         else:
             agent.provider.chat(system, [tool], prompt, on_tool)
     except Exception as e:

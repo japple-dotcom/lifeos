@@ -8,7 +8,9 @@ tapping **Approve**.
 
 1. Make sure **Tailscale** is installed and switched on (it's what lets your phone reach Life OS privately).
 2. Open **Chrome** and go to the Life OS address you were given.
-3. Tap your name, type the **household key**, tap **Sign in**. You stay signed in.
+3. Tap your name, type the **household key**, tap **Sign in**. You stay signed in. (Quicker: on the Life OS
+   computer, click the Life OS icon at the top of the screen → **Show household key**, and point your phone's
+   camera at your code.)
 4. Tap **Install Life OS** (or Chrome menu ⋮ → **Install app**). It now has its own icon.
 5. On the Today screen, follow **Getting started**: connect your Google account, turn on notifications.
 
@@ -163,6 +165,18 @@ are just for fun; pocket money still only comes from chores.
   children: phone numbers, bedtimes, house rules and where things are.
 - **Car running costs**: To-do → Renewals → Cars → **Running costs**. Add fuel and bills as you go; it works out
   the cost per mile and when the next service is due, and lists the MOT advisories.
+- **Christmas** (Home, from October): each person's budget, ideas and what's bought and wrapped; the cards list;
+  the last posting dates. **Put the dates in our to-dos** so nothing's missed.
+- **School kit**: Home → School kit → set each child's PE, packed-lunch and other kit days once. There's a
+  reminder at 6:30pm the night before. **Lost something?** reminds us to check lost property.
+- **Garden**: frost and watering warnings in the morning, and this month's garden jobs.
+- **Meter readings**: a reminder on the 1st. Type the number in (or it's read by itself if Home Assistant can see the
+  meter), then **Put an email to the supplier in Gmail drafts**.
+- **What can we make?** (To-do → Dinners): photo of the fridge or type what's in it, and pick a dinner.
+- **Print this week's sheet** (Home): one page for the fridge door with the week's calendar, dinners, bins and kit.
+- **Documents** (Home): where the passports and certificates are kept, and when they run out. Ask "Where's Leo's
+  passport?" in the search box or on the kitchen speaker. Never type document numbers.
+- **Contents list** (Home): valuables room by room with a photo or receipt, for the insurance.
 
 ## Parties, recipes and better prices
 
@@ -212,6 +226,8 @@ choose it under **Install an update file**.
 
 - **"Can't reach Life OS"**: check Tailscale is switched on, then try again.
 - **Google things missing**: Settings → Google accounts → Reconnect.
+- **Google says "access blocked" or "hasn't completed verification"**: in Google Cloud → Google Auth Platform →
+  Audience → Test users, add your Gmail address, then Connect again.
 - **No notifications**: Settings → Notifications → Send a test notification.
 - **Words too small**: Settings → Text size → Large or Extra large.
 - **"That household key is not right"**: on the Mac, click the Life OS icon at the top of the screen → **Show

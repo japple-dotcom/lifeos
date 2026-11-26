@@ -12,8 +12,10 @@ through a fixed set of tools, under a safety policy that makes money, messages a
 - Front end: plain HTML/CSS/JS, no build step, no framework (`web/`). Service worker `web/sw.js`.
 - Tests: pytest; Playwright + Chrome for `tests/test_e2e_browser.py` (skipped if not installed).
 
-Front end v0.18: new screens live in `web/more.js`, which app.js calls through `hook(name, data)` after Today, Home,
-Settings and Cars load (helpers shared as `window.LifeOS`). `web/sitter.html|js|css` is the printable sheet.
+Front end v0.18/v0.19: new screens live in `web/more.js` (v0.18) and `web/extra.js` (v0.19), which app.js calls
+through `hook(name, data)` after Today, Home, Settings and Cars load (helpers shared as `window.LifeOS`, including
+`attachments` and `loadMeals`). `web/sitter.html|js|css` and `web/week.html|js|css` are the printable sheets (the
+agenda's print rule only applies while the agenda dialog is open).
 
 ## How it runs (v0.15): an app with code layers
 - `lifeos_boot.py` (repo root) is the entry point everywhere: the app download, `install-mac.sh`'s Life OS.app,
@@ -123,7 +125,25 @@ lifeos/                 the service
   assist.py             HA conversation agent: converse() (/api/voice/converse, key) with 5-minute history and a
                         follow-up flag; integration_files()/zip for config/custom_components/lifeos
   aierrors.py           Assistant errors in plain English (credit, key, model, limits) for Ask, doctor, voice, live test
-  routes18.py           Thin routes for the v0.18 features, added from create_app; /local/key (menu bar only)
+  routes18.py           Thin routes for the v0.18 features, added from create_app; /local/key (menu bar only, with a QR
+                        sign-in code per adult when the public address is https)
+  routes19.py           Thin routes for the v0.19 features, added from create_app (incl. /api/accounts/client)
+  localonly.py          is_local(request): loopback client AND no proxy/Tailscale headers AND a localhost Host. Tailscale
+                        Serve hands phones over from 127.0.0.1, so the client address alone never means "this computer"
+  qr.py                 Pure-Python QR encoder (byte mode, level M, versions 1-10) -> matrix()/svg()
+  phones.py             One-time sign-in codes (make_code/use_code, 10 min, single use; /api/login {join}) and
+                        setup(): the fixed `tailscale serve --bg http://127.0.0.1:<port>` command, saves LIFEOS_PUBLIC_URL
+  christmas.py          Records "christmas" (xmas-<year>): budgets, people (ideas from profiles), bought/wrapped, cards,
+                        dates (Royal Mail POSTING, calendar school events, own), file_dates once, wall() countdown
+  meters.py             Meter readings (records "meter_reading"), HA total sensors, monthly(), supplier email as draft
+  schoolkit.py          PE/lunch/other kit days per child; tomorrow(), evening() 18:30 Sun-Thu, lost() -> to-do
+  garden.py             Frost/watering advice from HA weather.get_forecasts or Open-Meteo (postcodes.io), month's jobs
+  fridge.py             Fridge photo -> save_dinners (forced tool, image to the active AI once, never stored);
+                        from_text() needs no AI; have_it() -> meal plan; to_shopping() skips staples/duplicates
+  weeksheet.py          The A4 week (calendar, dinners, bins out, kit, birthdays, rota, chores); sunday() link
+  inventory.py          Home contents (records "item"), cover vs total warnings, CSV with formula-safe cells
+  documents.py          Where documents are kept (records "document"), expiry -> renewal, refuses document numbers,
+                        where_is() for the search box and the speakers
   store.records         Generic records table (kind, id, JSON, at) for the v0.15+ features; meals.rating column.
                         Pocket money: allowance (state), goals (records "goal"); money moves are chore_log rows
                         (household.is_money_move keeps them off the chores list)
@@ -204,5 +224,9 @@ Releasing: bump `__version__`, add a CHANGES.md section, tag `vX.Y.Z` and push (
   non-public addresses. Haggle and party emails are Gmail drafts only.
 - **Voice** never adds new powers: Assist text goes through the agent and its policies; HA `notify` stays refused
   for the AI; the kitchen display's Ask is read-only and answered in the browser. School run and childcare use
-  busy/free only. Attachments are never sent to Google or the AI.
+  busy/free only. Attachments are never sent to Google or the AI. The one exception to "nothing visual goes to the
+  AI" is the fridge photo, sent to the active assistant only when someone taps Find dinners, and never kept.
+- "This computer" means `localonly.is_local` (quit, phone access setup, the key page), never the client address
+  alone. Documents and the contents list never go to the assistant or Google; document numbers are refused.
+  Meter readings to suppliers are Gmail drafts only. Christmas and garden never buy anything.
 - Never commit `.env`, `secrets/`, `data/` or `versions/`. Never connect clinic, patient or work data.

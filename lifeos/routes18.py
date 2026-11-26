@@ -237,18 +237,35 @@ def add_routes(app, svc, agent, d: SimpleNamespace) -> None:
     def local_key(request: Request, t: str = ""):
         from . import desktop
         ctl = desktop.controller
-        if not ctl or not ctl.key_token_ok(t) or not s.api_key:
+        from .localonly import is_local
+        if not ctl or not ctl.key_token_ok(t) or not s.api_key or not is_local(request):
             raise HTTPException(404, "Not Found")
         key = html.escape(s.api_key)
+        from . import phones, qr
+        codes = ""
+        if s.public_url.startswith("https://"):
+            names = s.household.get("names") or {}
+            cards = []
+            for p in s.household.get("adults") or []:
+                name = html.escape(names.get(p, p.title()))
+                link = phones.join_link(svc, phones.make_code(p))
+                cards.append(f'<figure>{qr.svg(link, 220, f"Sign in as {name}")}<figcaption>{name}\'s phone</figcaption></figure>')
+            codes = ('<h2>Or scan with the phone\'s camera</h2><p>Each code signs one phone in as that person, once, '
+                     'within 10 minutes. The phone needs Tailscale switched on.</p><div class="codes">' + "".join(cards) + "</div>")
+        else:
+            codes = ("<p class='hint'>To sign phones in by scanning a code, set up phone access first (Settings &gt; "
+                     "Updates and this computer &gt; Set up phone access).</p>")
         page = f"""<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Life OS household key</title>
 <style>body{{font:18px/1.5 system-ui,sans-serif;max-width:36rem;margin:3rem auto;padding:0 1rem;color:#111;background:#f6f5f1}}
 code{{display:block;font-size:1.6rem;padding:1rem;margin:1rem 0;background:#fff;border:2px solid #0a5c53;border-radius:12px;
-word-break:break-all;user-select:all}}p.hint{{color:#444}}@media (prefers-color-scheme:dark){{body{{background:#101214;color:#eee}}
+word-break:break-all;user-select:all}}p.hint{{color:#444}}.codes{{display:flex;flex-wrap:wrap;gap:1.5rem}}
+figure{{margin:0;text-align:center}}figure svg{{border-radius:8px}}@media (prefers-color-scheme:dark){{body{{background:#101214;color:#eee}}
 code{{background:#1b1e21;border-color:#4fc1b0}}p.hint{{color:#bbb}}}}</style></head><body><main>
 <h1>Your household key</h1><p>Type this on a phone or the kitchen tablet to sign in to Life OS once.</p>
 <code id="k">{key}</code>
+{codes}
 <p class="hint">This page only opens from the Life OS icon in the menu bar on this computer, and stops working after 10
 minutes. Keep the key to your household.</p></main></body></html>"""
         return HTMLResponse(page, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
-                                           "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"})
+                                           "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:"})

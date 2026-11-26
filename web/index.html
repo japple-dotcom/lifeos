@@ -183,6 +183,7 @@
         </div>
         <p id="login-error" class="error" role="alert"></p>
         <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        <p class="hint">Quicker: on the Life OS computer, click the Life OS icon at the top of the screen, choose Show household key, and point this phone's camera at your code.</p>
       </form>
     </section>
 
@@ -192,6 +193,8 @@
       <p class="lead" id="today-date"></p>
       <div id="today-warnings"></div>
       <p class="notice bins-note" id="bins-tonight" role="status" hidden></p>
+      <p class="notice bins-note" id="kit-tomorrow" role="status" hidden></p>
+      <p class="xmas-line" id="xmas-today" hidden><a href="#home" id="xmas-today-link"></a></p>
       <section class="block card brief" aria-labelledby="brief-title" id="brief-block" hidden>
         <h2 id="brief-title">Latest briefing</h2>
         <p class="meta" id="brief-meta"></p>
@@ -549,6 +552,16 @@
             <button type="submit" class="btn btn-primary btn-block">Add it</button>
             <p id="recipe-result" class="meta" role="status" aria-live="polite"></p>
           </form>
+          <form id="fridge-form" class="card stack" novalidate>
+            <h3>What can we make?</h3>
+            <p class="hint" id="fridge-hint">Take a photo of the open fridge, or type what's in it. A photo goes to the assistant once, to read, and isn't kept. A typed list is matched against dinners you've had before, no assistant needed.</p>
+            <div class="field"><label for="fridge-photo">Photo of the fridge</label>
+              <input id="fridge-photo" type="file" accept="image/*" capture="environment" aria-describedby="fridge-hint"></div>
+            <div class="field"><label for="fridge-text">Or type what's there</label>
+              <textarea id="fridge-text" rows="2" placeholder="For example: chicken, peppers, rice, half a tub of cream"></textarea></div>
+            <button type="submit" class="btn btn-primary btn-block">Find dinners</button>
+            <div id="fridge-result" class="stack" role="status" aria-live="polite"></div>
+          </form>
         </section>
       </div>
 
@@ -625,6 +638,45 @@
           <p class="hint">Jobs for things you don't have (a chimney, a garden) aren't suggested.</p>
           <div id="seasonal-things" class="stack"></div>
         </details>
+      </section>
+      <section class="block card stack" id="xmas-block" aria-labelledby="xmas-title" hidden>
+        <h2 id="xmas-title">Christmas</h2>
+        <p class="lead" id="xmas-summary" role="status"></p>
+        <form id="xmas-budget-form" class="inline-form" novalidate>
+          <div class="field grow"><label for="xmas-budget">Total present budget (£)</label><input id="xmas-budget" type="number" inputmode="decimal" min="0" step="1"></div>
+          <button type="submit" class="btn btn-secondary">Save budget</button>
+        </form>
+        <h3>Presents</h3>
+        <div id="xmas-people" class="stack"></div>
+        <form id="xmas-person-form" class="card stack" novalidate>
+          <div class="field"><label for="xmas-person">Add someone to buy for</label><input id="xmas-person" type="text" list="xmas-suggest" autocomplete="off" placeholder="For example: Grandma"></div>
+          <datalist id="xmas-suggest"></datalist>
+          <div class="field"><label for="xmas-person-budget">Their budget (£) <span class="optional">(optional)</span></label><input id="xmas-person-budget" type="number" inputmode="decimal" min="0" step="1"></div>
+          <button type="submit" class="btn btn-secondary btn-block">Add person</button>
+        </form>
+        <h3>Cards</h3>
+        <p class="meta" id="xmas-cards-count"></p>
+        <ul class="list compact" id="xmas-cards" aria-label="Christmas cards"></ul>
+        <form id="xmas-card-form" class="stack" novalidate>
+          <div class="field"><label for="xmas-card-names">Add names to the cards list</label><textarea id="xmas-card-names" rows="2" placeholder="One name per line"></textarea></div>
+          <button type="submit" class="btn btn-secondary btn-block">Add to cards</button>
+        </form>
+        <h3>Key dates</h3>
+        <ul class="list compact" id="xmas-dates" aria-label="Christmas dates"></ul>
+        <details class="card add-detail">
+          <summary>Add a date</summary>
+          <form id="xmas-date-form" class="stack" novalidate>
+            <div class="field"><label for="xmas-date-what">What's the date for?</label><input id="xmas-date-what" type="text" autocomplete="off" placeholder="For example: Order the turkey"></div>
+            <div class="field"><label for="xmas-date-day">Christmas date</label><input id="xmas-date-day" type="date"></div>
+            <button type="submit" class="btn btn-secondary btn-block">Add date</button>
+          </form>
+        </details>
+        <button type="button" class="btn btn-secondary btn-block" id="xmas-file">Put the dates in our to-dos</button>
+      </section>
+      <section class="block card stack" id="sheet-block" aria-labelledby="sheet-title">
+        <h2 id="sheet-title">This week on the fridge</h2>
+        <p class="hint">One A4 page for the fridge door: each day's calendar, dinner, bins, school kit and birthdays, plus the cleaning rota and chores. From Saturday it shows the week ahead.</p>
+        <a class="btn btn-primary btn-block" href="week.html" target="_blank" rel="noopener">Print this week's sheet</a>
       </section>
       <section class="block card stack" id="bins-block" aria-labelledby="bins-title" hidden>
         <h2 id="bins-title">Bin days</h2>
@@ -713,6 +765,105 @@
             <button type="submit" class="btn btn-primary btn-block">Save the sheet</button>
           </form>
         </details>
+      </section>
+      <section class="block card stack" id="kit-block" aria-labelledby="kit-title" hidden>
+        <h2 id="kit-title">School kit</h2>
+        <p class="lead" id="kit-next" role="status"></p>
+        <p class="hint">Said the evening before at 6:30pm on school nights, and on Today. Holidays and closures are skipped.</p>
+        <details id="kit-setup">
+          <summary>PE, packed lunch and kit days</summary>
+          <div class="stack">
+            <div id="kit-kids" class="stack"></div>
+            <button type="button" class="btn btn-primary btn-block" id="kit-save">Save kit days</button>
+          </div>
+        </details>
+        <details class="card add-detail">
+          <summary>Lost something?</summary>
+          <form id="kit-lost-form" class="stack" novalidate>
+            <div class="field"><label for="kit-lost-kid">Whose is it?</label><select id="kit-lost-kid"></select></div>
+            <div class="field"><label for="kit-lost-item">What's missing?</label><input id="kit-lost-item" type="text" autocomplete="off" placeholder="For example: blue water bottle"></div>
+            <button type="submit" class="btn btn-secondary btn-block">Remind us to check lost property</button>
+          </form>
+        </details>
+      </section>
+      <section class="block card stack" id="garden-block" aria-labelledby="garden-title" hidden>
+        <h2 id="garden-title">Garden</h2>
+        <ul class="list compact" id="garden-advice" aria-label="Garden weather advice"></ul>
+        <p class="meta" id="garden-forecast"></p>
+        <h3>Jobs this month</h3>
+        <ul class="list compact" id="garden-jobs" aria-label="Garden jobs this month"></ul>
+        <details id="garden-setup">
+          <summary>What the garden has, and the weather</summary>
+          <div class="stack">
+            <fieldset class="stack"><legend>We have</legend><div class="chip-row" id="garden-have"></div></fieldset>
+            <div class="field" id="garden-weather-field" hidden><label for="garden-weather">Home Assistant weather</label><select id="garden-weather"></select></div>
+            <div class="field"><label for="garden-postcode">Postcode (for the forecast without Home Assistant)</label><input id="garden-postcode" type="text" autocomplete="postal-code" autocapitalize="characters"></div>
+            <div class="check-row"><input type="checkbox" id="garden-nudges"><label for="garden-nudges">Frost and watering notifications at 7:30am</label></div>
+            <button type="button" class="btn btn-primary btn-block" id="garden-save">Save garden</button>
+          </div>
+        </details>
+      </section>
+      <section class="block card stack" id="meters-block" aria-labelledby="meters-title" hidden>
+        <h2 id="meters-title">Meter readings</h2>
+        <p class="hint" id="meters-hint"></p>
+        <div id="meters-list" class="stack"></div>
+        <button type="button" class="btn btn-secondary btn-block" id="meters-read" hidden>Read the meters from Home Assistant now</button>
+        <details id="meters-setup">
+          <summary>Meters, sensors and the reminder day</summary>
+          <div class="stack">
+            <div id="meters-cfg" class="stack"></div>
+            <button type="button" class="btn btn-secondary btn-small" id="meters-add">Add a meter</button>
+            <div class="field"><label for="meters-day">Remind us on this day of the month</label><select id="meters-day"></select></div>
+            <button type="button" class="btn btn-primary btn-block" id="meters-save">Save meters</button>
+          </div>
+        </details>
+      </section>
+      <section class="block card stack" id="docs-block" aria-labelledby="docs-title" hidden>
+        <h2 id="docs-title">Documents</h2>
+        <p class="hint">Where each important document is kept, and expiry dates in Renewals. Life OS never asks for document numbers, and none of this goes to the assistant or Google.</p>
+        <form id="docs-find" class="inline-form" role="search" novalidate>
+          <div class="field grow"><label for="docs-q">Find a document</label><input id="docs-q" type="search" autocomplete="off" placeholder="Where's Leo's passport?"></div>
+          <button type="submit" class="btn btn-secondary">Find</button>
+        </form>
+        <p id="docs-answer" role="status" aria-live="polite"></p>
+        <ul class="list" id="docs-list" aria-label="Documents"></ul>
+        <details class="card add-detail" id="docs-add">
+          <summary>Add a document</summary>
+          <form id="docs-form" class="stack" novalidate>
+            <input type="hidden" id="docs-id">
+            <div class="field"><label for="docs-kind">Kind of document</label><select id="docs-kind"></select></div>
+            <div class="field"><label for="docs-whose">Whose document</label><input id="docs-whose" type="text" autocomplete="off" placeholder="For example: Leo, or leave blank for the household"></div>
+            <div class="field"><label for="docs-where">Where it's kept</label><input id="docs-where" type="text" autocomplete="off" placeholder="For example: grey folder, study desk drawer"></div>
+            <div class="field"><label for="docs-expires">Expiry date <span class="optional">(if it has one)</span></label><input id="docs-expires" type="date"></div>
+            <div class="field"><label for="docs-notes">Notes about the document <span class="optional">(no numbers)</span></label><input id="docs-notes" type="text" autocomplete="off"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="docs-save">Save document</button>
+          </form>
+        </details>
+      </section>
+      <section class="block card stack" id="contents-block" aria-labelledby="contents-title" hidden>
+        <h2 id="contents-title">Contents list</h2>
+        <p class="hint">Valuables room by room with photos and receipts, for the insurer after a break-in, fire or flood. Kept on the Life OS computer only.</p>
+        <p class="lead" id="contents-summary" role="status"></p>
+        <div id="contents-warnings" class="stack"></div>
+        <div id="contents-rooms" class="stack"></div>
+        <details class="card add-detail" id="contents-add">
+          <summary>Add an item</summary>
+          <form id="contents-form" class="stack" novalidate>
+            <input type="hidden" id="ci-id">
+            <div class="field"><label for="ci-name">What's the item?</label><input id="ci-name" type="text" autocomplete="off" placeholder="For example: 55-inch TV"></div>
+            <div class="field"><label for="ci-room">Room</label><select id="ci-room"></select></div>
+            <div class="field"><label for="ci-value">Cost to replace it (£)</label><input id="ci-value" type="number" inputmode="decimal" min="0" step="1"></div>
+            <div class="field"><label for="ci-bought">When it was bought <span class="optional">(optional)</span></label><input id="ci-bought" type="date"></div>
+            <div class="field"><label for="ci-serial">Serial number <span class="optional">(optional)</span></label><input id="ci-serial" type="text" autocomplete="off"></div>
+            <div class="field"><label for="ci-notes">Notes about the item <span class="optional">(optional)</span></label><input id="ci-notes" type="text" autocomplete="off"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="ci-save">Save item</button>
+          </form>
+        </details>
+        <form id="contents-cover-form" class="inline-form" novalidate>
+          <div class="field grow"><label for="contents-cover">Contents cover on the home insurance (£)</label><input id="contents-cover" type="number" inputmode="decimal" min="0" step="100"></div>
+          <button type="submit" class="btn btn-secondary">Save cover</button>
+        </form>
+        <a class="btn btn-secondary btn-block" href="/api/inventory.csv" download="home-contents.csv">Download the list as a spreadsheet</a>
       </section>
       <section class="block" aria-labelledby="manual-title">
         <h2 id="manual-title">Home manual</h2>
@@ -870,6 +1021,15 @@
           <input type="file" id="sys-file" accept=".zip,application/zip" aria-describedby="sys-file-hint">
         </div>
         <div class="check-row" id="sys-autostart-row" hidden><input type="checkbox" id="sys-autostart"><label for="sys-autostart">Start Life OS when this computer starts</label></div>
+        <details id="phone-access">
+          <summary>Set up phone access</summary>
+          <div class="stack">
+            <p class="hint">Phones reach Life OS through Tailscale, so it never goes on the open internet. This runs Tailscale on this computer and saves the address for phones. Install Tailscale and sign in to it first (tailscale.com), on this computer and on each phone.</p>
+            <p id="phone-access-status" role="status" aria-live="polite"></p>
+            <button type="button" class="btn btn-primary btn-block" id="phone-access-run">Set up phone access</button>
+            <a class="btn btn-secondary btn-block" id="phone-access-link" target="_blank" rel="noopener noreferrer" hidden>Open Tailscale to switch on HTTPS</a>
+          </div>
+        </details>
         <details id="sys-keys">
           <summary>Keys and addresses</summary>
           <form id="sys-keys-form" class="stack" novalidate>
@@ -961,6 +1121,17 @@
         <h2 id="google-title">Google accounts</h2>
         <p class="hint">Each person connects their own account, ideally on their own phone. Calendars are combined. Email access is optional and only ever drafts; nothing is sent without a tap.</p>
         <ol class="checklist" id="google-checklist" aria-label="Google connection checklist"></ol>
+        <details id="google-client" class="card add-detail">
+          <summary id="google-client-summary">Add the Google sign-in file</summary>
+          <div class="stack">
+            <p class="hint">In Google Cloud (Google Auth Platform, Clients), make a client of type Web application with the redirect address above. Then choose the JSON file it gives you, or paste its client ID and secret.</p>
+            <div class="field"><label for="gc-file">Downloaded JSON file</label><input type="file" id="gc-file" accept=".json,application/json"></div>
+            <div class="field"><label for="gc-id">Google client ID</label><input id="gc-id" type="text" autocomplete="off" spellcheck="false" placeholder="1234567890-abc.apps.googleusercontent.com"></div>
+            <div class="field"><label for="gc-secret">Google client secret</label><input id="gc-secret" type="password" autocomplete="off"></div>
+            <button type="button" class="btn btn-primary btn-block" id="gc-save">Save the Google sign-in</button>
+            <p id="gc-result" role="status" aria-live="polite"></p>
+          </div>
+        </details>
         <div id="accounts"></div>
       </section>
 
@@ -1021,5 +1192,6 @@
 
   <script src="app.js" defer></script>
   <script src="more.js" defer></script>
+  <script src="extra.js" defer></script>
 </body>
 </html>

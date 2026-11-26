@@ -238,8 +238,16 @@ def quick_answer(svc, text: str) -> str:
     for pattern, command in rules:
         if re.search(pattern, low) and not re.search(r"\b(add|put|move|change|cancel|book|remind|delete|tick)\b", low):
             return answer(svc, command)
+    if re.search(r"\b(pe kit|school kit|packed lunch|kit tomorrow)\b", low):
+        from . import schoolkit
+        t = schoolkit.tomorrow(svc)
+        return f"Tomorrow: {t['text']}." if t["items"] else "Nothing special to take to school tomorrow."
     m = re.search(r"\bwhere(?:'s| is| are) (?:the |our )?([a-z\- ]{3,30})", low)
     if m:
+        from . import documents
+        found = documents.where_is(svc, low)
+        if found:
+            return found
         from . import manual
         word = m.group(1).strip().rstrip("?")
         hits = [x for x in manual.entries(svc) if word in x["title"].lower() or x["title"].lower() in word]

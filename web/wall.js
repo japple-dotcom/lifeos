@@ -119,6 +119,14 @@
       binsLine.textContent = bins.when === "tomorrow" ? `Bins out tonight: ${what}` : `Bins ${bins.when}: ${what}`;
       binsLine.classList.toggle("urgent", bins.when === "tomorrow" || bins.when === "today");
     }
+    const kit = data.school_tomorrow;
+    const kitLine = $("#w-kit");
+    kitLine.hidden = !(kit && kit.items && kit.items.length);
+    kitLine.textContent = kitLine.hidden ? "" : `School tomorrow: ${kit.text}`;
+    const xmas = data.christmas;
+    $("#w-xmas").hidden = !xmas;
+    $("#w-xmas").textContent = !xmas ? "" : xmas.days_to_go === 0 ? "Happy Christmas!" :
+      `${xmas.days_to_go} day${xmas.days_to_go === 1 ? "" : "s"} to Christmas` + (xmas.next ? ` · next: ${xmas.next.what}` : "");
     const parcels = data.parcels || [];
     $("#w-parcels-block").hidden = !parcels.length;
     $("#w-parcels").replaceChildren(...parcels.map((p) => {

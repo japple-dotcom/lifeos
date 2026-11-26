@@ -166,6 +166,7 @@ class DemoHA:
             "media_player.kitchen_speaker": ("Kitchen speaker", "idle"), "media_player.living_room_speaker": ("Living room speaker", "off"),
             "person.joe": ("Joe", "home"), "person.sue": ("Sue", "not_home"),
             "calendar.bin_collections": ("Bin collections", "off"),
+            "sensor.electricity_meter": ("Electricity meter", "18342.6"), "sensor.gas_meter": ("Gas meter", "4021.38"),
         }
         self.spoken: list[str] = []  # what Life OS said on the speakers (shown in the demo's log)
 
@@ -178,7 +179,20 @@ class DemoHA:
             attrs.update(temperature=self.target)
         if entity_id == "binary_sensor.back_door":
             attrs.update(device_class="door")
+        if entity_id == "sensor.electricity_meter":
+            attrs.update(device_class="energy", state_class="total_increasing", unit_of_measurement="kWh")
+        if entity_id == "sensor.gas_meter":
+            attrs.update(device_class="gas", state_class="total_increasing", unit_of_measurement="m³")
         return {"entity_id": entity_id, "state": st, "attributes": attrs}
+
+    def service_response(self, domain_service, data):
+        """weather.get_forecasts: a cold, dry few days (so the garden shows a frost warning)."""
+        if domain_service != "weather.get_forecasts":
+            return {}
+        today = date.today()
+        days = [{"datetime": (today + timedelta(days=i)).isoformat(), "temperature": t, "templow": lo, "precipitation": r}
+                for i, (t, lo, r) in enumerate(((7, -1, 0), (6, 0, 0.2), (9, 3, 4.5), (10, 5, 1.2), (8, 2, 0)))]
+        return {(data or {}).get("entity_id", "weather.home"): {"forecast": days}}
 
     def states(self, domain=None):
         return [self.state(e) for e in self.devices if not domain or e.startswith(domain + ".")]
@@ -537,6 +551,52 @@ def build():
               at=(d - timedelta(days=8)).isoformat())
     store.put("clean_done", "demo-c2", {"job": "beds", "by": "me", "date": (d - timedelta(days=9)).isoformat(), "points": 3},
               at=(d - timedelta(days=9)).isoformat())
+
+    # v0.19: Christmas, school kit, the garden, meter readings, documents and the contents list
+    from lifeos import christmas, documents, garden, inventory, meters, schoolkit
+    year = d.year if d.month >= 2 else d.year - 1
+    christmas.set_budget(svc, 600, year)
+    for name, budget in (("Ava", 150), ("Leo", 150), ("Grandma Pat", 40), ("Megan (teacher)", 10)):
+        christmas.add_person(svc, name, budget, year)
+    xp = {p["name"]: p["id"] for p in christmas.plan(svc, year)["people"]}
+    christmas.update_person(svc, xp["Ava"], idea="Art set with easel", year=year)
+    christmas.update_person(svc, xp["Leo"], idea="Dinosaur torch", year=year)
+    christmas.bought(svc, xp["Ava"], "Roller skates", 49.99, "Decathlon", year)
+    christmas.bought(svc, xp["Leo"], "Lego treehouse", 45, "Amazon", year)
+    christmas.bought(svc, xp["Grandma Pat"], "Garden centre voucher", 25, "Online", year)
+    p = christmas.plan(svc, year)
+    skates = next(b for x in p["people"] if x["name"] == "Ava" for b in x["bought"])
+    christmas.present(svc, xp["Ava"], skates["id"], wrapped=True, year=year)
+    christmas.card(svc, "Grandma Pat\nUncle Rob and Jen\nThe Patels next door\nMrs Hughes (Ava's teacher)\nAuntie Kate", year=year)
+    first = christmas.plan(svc, year)["cards"][0]
+    christmas.card(svc, cid=first["id"], sent=True, year=year)
+    christmas.add_date(svc, "Order the turkey from the butcher", f"{year}-12-12", year)
+    christmas.add_date(svc, "Book the supermarket delivery slot", f"{year}-12-05", year)
+    schoolkit.save(svc, {"Ava": {"pe": ["tue", "thu"], "lunch": ["fri"], "other": [{"what": "recorder", "days": ["wed"]}]},
+                         "Leo": {"pe": ["wed"], "lunch": [], "other": [{"what": "swimming bag", "days": ["mon"]}]}})
+    garden.save(svc, have=["lawn", "hedge", "pots", "trees"], weather="weather.home")
+    meters.save_cfg(svc, [{"id": "electricity", "name": "Electricity", "unit": "kWh", "sensor": "sensor.electricity_meter",
+                           "supplier": "readings@example-energy.co.uk"},
+                          {"id": "gas", "name": "Gas", "unit": "m³", "sensor": "", "supplier": ""}])
+    for back, e, g in ((86, 17321.0, 3874.2), (56, 17602.4, 3911.9), (26, 17987.1, 3968.4)):
+        day = (d - timedelta(days=back)).isoformat()
+        meters.add_reading(svc, "electricity", e, day, "home assistant")
+        meters.add_reading(svc, "gas", g, day)
+    for kind, whose, where, exp in (("Passport", "Joe", "Grey folder, study desk drawer", (d + timedelta(days=1400)).isoformat()),
+                                    ("Passport", "Sue", "Grey folder, study desk drawer", (d + timedelta(days=980)).isoformat()),
+                                    ("Passport", "Ava", "Grey folder, study desk drawer", (d + timedelta(days=640)).isoformat()),
+                                    ("Passport", "Leo", "Grey folder, study desk drawer", (d + timedelta(days=150)).isoformat()),
+                                    ("Birth certificate", "Leo", "Fireproof box under the stairs", ""),
+                                    ("Will", "", "With Hartley Solicitors (copy in the fireproof box)", ""),
+                                    ("Car logbook (V5C)", "", "Blue wallet in the kitchen drawer", "")):
+        documents.save(svc, kind, whose, where, exp)
+    inventory.set_cover(svc, 35000)
+    for name, room, value, back, serial in (("55-inch TV", "Living room", 899, 400, "LG55C3-77812"),
+                                            ("Sofa", "Living room", 1250, 900, ""),
+                                            ("MacBook Pro", "Study", 1899, 1500, "C02XK1ABCD"),
+                                            ("Engagement ring", "Jewellery and watches", 2400, 4000, ""),
+                                            ("Road bike", "Garage and shed", 950, 700, "WTU123456")):
+        inventory.save_item(svc, name, room, value, (d - timedelta(days=back)).isoformat(), serial)
 
     # Watch for the (simulated) electrician's reply, as the real scheduler does every 30 minutes.
     import threading

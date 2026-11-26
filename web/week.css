@@ -1,0 +1,34 @@
+/* The weekly fridge sheet: a phone-friendly list on screen, one landscape A4 page when printed. */
+.week-wrap { max-width: 80rem; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+.sheet-bar { display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: space-between; margin-bottom: 1rem; }
+.week-wrap h1 { font-size: 1.8rem; margin: 0.2rem 0 0.8rem; }
+.week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.6rem; }
+.week-day { border: 2px solid var(--border); border-radius: 12px; padding: 0.5rem 0.7rem; break-inside: avoid; }
+.week-day.is-today { border-color: var(--accent); }
+.week-day h2 { font-size: 1.15rem; margin: 0 0 0.3rem; display: flex; justify-content: space-between; gap: 0.5rem; }
+.week-day h2 .d { font-weight: 400; color: var(--muted); }
+.week-day ul { list-style: none; margin: 0; padding: 0; }
+.week-day li { margin: 0.15rem 0; line-height: 1.3; }
+.week-day .t { font-variant-numeric: tabular-nums; font-weight: 700; margin-right: 0.3rem; }
+.week-day .tag { display: block; margin-top: 0.3rem; font-weight: 700; }
+.week-day .dinner { margin-top: 0.4rem; padding-top: 0.3rem; border-top: 1px dashed var(--border); }
+.week-day .none { color: var(--muted); }
+.week-foot { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.week-foot h2 { font-size: 1.1rem; margin: 0 0 0.3rem; border-bottom: 2px solid var(--accent); }
+.week-foot ul { margin: 0; padding-left: 1.1rem; }
+@media print {
+  @page { size: A4 landscape; margin: 9mm; }
+  .no-print, #week-status { display: none !important; }
+  body { background: #fff; color: #000; font-size: 10pt; }
+  .week-wrap { max-width: none; padding: 0; }
+  .week-wrap h1 { font-size: 16pt; margin: 0 0 4mm; }
+  .week-grid { grid-template-columns: repeat(7, 1fr); gap: 2mm; }
+  .week-day { border: 1px solid #000; border-radius: 2mm; padding: 2mm; min-height: 95mm; }
+  .week-foot ul { columns: 2; column-gap: 6mm; font-size: 9pt; }
+  .week-foot { break-inside: avoid; }
+  .week-day.is-today { border-color: #000; }
+  .week-day h2 { font-size: 11pt; }
+  .week-day h2 .d, .week-day .none { color: #444; }
+  .week-foot { grid-template-columns: 1fr 1fr; margin-top: 3mm; gap: 6mm; }
+  .week-foot h2 { font-size: 11pt; border-color: #000; }
+}

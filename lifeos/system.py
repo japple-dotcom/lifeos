@@ -1,7 +1,6 @@
 """Settings > This computer: version and updates, start with the computer, AI keys, restart and quit."""
 from __future__ import annotations
 
-import ipaddress
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -32,11 +31,8 @@ class OnBody(BaseModel):
 
 
 def _local(request: Request) -> bool:
-    host = request.client.host if request.client else ""
-    try:
-        return ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        return host in ("localhost", "testclient")
+    from .localonly import is_local
+    return is_local(request)
 
 
 def _controller():

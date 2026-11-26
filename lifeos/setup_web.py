@@ -6,7 +6,6 @@ or server without a screen, set up from a laptop on the same network).
 from __future__ import annotations
 
 import hmac
-import ipaddress
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -37,11 +36,8 @@ class StartBody(BaseModel):
 
 
 def _local(request: Request) -> bool:
-    host = request.client.host if request.client else ""
-    try:
-        return ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        return host in ("localhost", "testclient")
+    from .localonly import is_local
+    return is_local(request)
 
 
 def create_setup_app(controller=None, code: str = "") -> FastAPI:

@@ -24,9 +24,9 @@ from pydantic import BaseModel
 from . import approvals, oauth, sessions
 from .accounts import GoogleAccounts
 from .agent import Agent
-from . import (activity, adminhour, agenda, away, bills, bins, bridge, cars, childcare, deliveries, doctor, energy,
-               files, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles, recipes,
-               scheduling, schoolrun, seasonal, shop, solver, todos, trades, trips, voice)
+from . import (activity, adminhour, agenda, away, bills, bins, bridge, cars, childcare, christmas, deliveries, doctor,
+               energy, files, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles,
+               recipes, scheduling, schoolkit, schoolrun, seasonal, shop, solver, todos, trades, trips, voice)
 from . import checklist as checklist_mod
 from .config import Settings, load_settings, setup_problems
 from .scheduler import run_loop, start_scheduler
@@ -76,8 +76,9 @@ class ProviderBody(BaseModel):
 
 
 class LoginBody(BaseModel):
-    key: str
-    person: str
+    key: str = ""
+    person: str = ""
+    join: str = ""   # a one-time code from the QR on this computer's household key page
 
 
 class TaskBody(BaseModel):
@@ -337,7 +338,15 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
         who = request.client.host if request.client else "?"
         if limiter.blocked(who):
             raise HTTPException(429, "Too many wrong keys. Wait 15 minutes, then try again.")
-        if not hmac.compare_digest(body.key.strip().encode(), s.api_key.encode()):
+        if body.join:
+            from . import phones
+            joined = phones.use_code(body.join.strip())
+            if not joined:
+                limiter.fail(who)
+                raise HTTPException(401, "That sign-in code has been used or is more than 10 minutes old. Show a new "
+                                         "one from the Life OS icon on the computer.")
+            body.person = joined
+        elif not hmac.compare_digest(body.key.strip().encode(), s.api_key.encode()):
             limiter.fail(who)
             raise HTTPException(status_code=401, detail="That household key is not right.")
         limiter.reset(who)
@@ -426,7 +435,9 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                 "dinner": household.dinner_on(svc), "waiting": waiting_on(), "next_up": next_up,
                 "rate_dinner": household.dinner_to_rate(svc), "childcare": soon_childcare(),
                 "parcels": _safe_call(lambda: deliveries.current(svc), {}),
-                "bins_tomorrow": _safe_call(lambda: bins.tomorrow(svc), [])}
+                "bins_tomorrow": _safe_call(lambda: bins.tomorrow(svc), []),
+                "school_tomorrow": _safe_call(lambda: schoolkit.tomorrow(svc), None),
+                "christmas": _safe_call(lambda: christmas.wall(svc), None)}
 
     def _safe_call(fn, default):
         try:
@@ -852,7 +863,9 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                 "parcels": _safe_call(lambda: deliveries.wall(svc), []),
                 "bins": _safe_call(lambda: bins.overview(svc)["next"], None),
                 "stars": _safe_call(lambda: [{"kid": k["kid"], "total": k["total"], "target": k["target"]}
-                                             for k in kidstuff.stars(svc)["kids"]], [])}
+                                             for k in kidstuff.stars(svc)["kids"]], []),
+                "school_tomorrow": _safe_call(lambda: schoolkit.tomorrow(svc), None),
+                "christmas": _safe_call(lambda: christmas.wall(svc), None)}
 
     # ---------- renewals ----------
     @app.get("/api/renewals")
@@ -1762,6 +1775,11 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
     routes18.add_routes(app, svc, agent, SimpleNamespace(
         current_person=current_person, current_kids=current_kids, current_viewer=current_viewer,
         require_key=require_key, name_of=name_of, need_google=need_google))
+
+    # ---------- v0.19: Christmas, phone access, meters, school kit, garden, fridge, week sheet, contents, documents ----------
+    from . import routes19
+    routes19.add_routes(app, svc, agent, SimpleNamespace(
+        current_person=current_person, name_of=name_of, need_google=need_google))
     return app
 
 

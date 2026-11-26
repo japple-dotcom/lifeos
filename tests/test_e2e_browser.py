@@ -763,3 +763,73 @@ def test_v018_kids_tablet_reading_homework_stars(base_url, browser):
                          "body: JSON.stringify({kid:'Ava', title:'x'})}).then(r => r.status)") == 401
     assert not errors, errors
     ctx.close()
+
+
+def test_v019_christmas_kit_garden_meters_documents_contents_fridge_week(base_url, browser):
+    """v0.19 screens on a phone: the Home blocks, What can we make? in Meals, the weekly sheet and Settings."""
+    url, svc = base_url
+    ctx, page = _phone(browser)
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    _sign_in(page, url)
+    page.locator("#kit-tomorrow, #xmas-today").first.wait_for(state="attached")
+    page.goto(f"{url}/app/#home")
+    # Christmas: add someone and a present
+    page.locator("#xmas-people details").first.wait_for()
+    page.get_by_label("Add someone to buy for").fill("Uncle Rob")
+    page.get_by_label("Their budget (£) (optional)").fill("20")
+    page.get_by_role("button", name="Add person").click()
+    page.locator("#xmas-people summary").filter(has_text="Uncle Rob").click()
+    page.get_by_label("Present for Uncle Rob", exact=True).fill("Whisky stones")
+    page.get_by_label("Cost of Uncle Rob's present (£)").fill("12")
+    page.get_by_role("button", name="Add present for Uncle Rob").click()
+    page.locator("#xmas-people summary").filter(has_text="Uncle Rob · £12 of £20").wait_for()
+    page.get_by_role("button", name="Put the dates in our to-dos").click()
+    page.locator("#toast").filter(has_text=re.compile("to-dos")).wait_for()
+    # school kit: lost property
+    page.locator("#kit-next").filter(has_text=re.compile(".")).wait_for()
+    page.get_by_text("Lost something?").click()
+    page.get_by_label("What's missing?").fill("blue water bottle")
+    page.get_by_role("button", name="Remind us to check lost property").click()
+    page.locator("#toast").filter(has_text="next school day").wait_for()
+    # garden: the demo forecast has a frost tonight
+    page.locator("#garden-advice").filter(has_text="Frost tonight").wait_for()
+    # meters: type a gas reading
+    page.get_by_label("New gas reading (m³)").fill("4100")
+    page.get_by_role("button", name="Save gas reading").click()
+    page.locator("#toast").filter(has_text="Gas reading saved").wait_for()
+    # documents: find, then add one
+    page.get_by_label("Find a document").fill("where's Leo's passport")
+    page.get_by_role("button", name="Find", exact=True).click()
+    page.locator("#docs-answer").filter(has_text="Grey folder").wait_for()
+    page.locator("#docs-add summary").click()
+    page.get_by_label("Kind of document").select_option("Birth certificate")
+    page.get_by_label("Whose document").fill("Ava")
+    page.get_by_label("Where it's kept").fill("Fireproof box under the stairs")
+    page.get_by_role("button", name="Save document").click()
+    page.locator("#docs-list").filter(has_text="Ava's birth certificate").wait_for()
+    # contents list
+    page.locator("#contents-add summary").click()
+    page.get_by_label("What's the item?").fill("Coffee machine")
+    page.get_by_label("Room", exact=True).select_option("Kitchen")
+    page.get_by_label("Cost to replace it (£)").fill("320")
+    page.get_by_role("button", name="Save item").click()
+    page.locator("#contents-rooms").filter(has_text="Coffee machine").wait_for()
+    # Meals: what can we make from a typed list (no assistant needed)
+    page.goto(f"{url}/app/#tasks?sec=meals")
+    page.get_by_label("Or type what's there").fill("chicken, peppers")
+    page.get_by_role("button", name="Find dinners").click()
+    page.get_by_role("button", name="Have Chicken fajitas tomorrow").click()
+    page.locator("#toast").filter(has_text="tomorrow's dinner").wait_for()
+    # Settings: phone access and the Google sign-in file are there
+    page.goto(f"{url}/app/#settings")
+    page.locator("#phone-access summary").click()
+    page.locator("#phone-access-status").filter(has_text=re.compile(".")).wait_for()
+    # the weekly sheet
+    page.goto(f"{url}/app/week.html")
+    page.get_by_role("heading", level=1, name=re.compile("^Week of")).wait_for()
+    assert page.locator(".week-day").count() == 7
+    page.get_by_role("button", name="Week after").click()
+    page.wait_for_function("document.querySelectorAll('.week-day').length === 7")
+    assert not errors, errors
+    ctx.close()

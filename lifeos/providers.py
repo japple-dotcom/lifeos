@@ -35,10 +35,18 @@ class ClaudeProvider:
     supports_web_search = True
 
     def chat(self, system: str, tools: list[dict], prompt: str, on_tool: ToolCallback, deep: bool = False,
-             history: list[dict] | None = None, web_search: bool = False) -> str:
+             history: list[dict] | None = None, web_search: bool = False,
+             image: tuple[bytes, str] | None = None) -> str:
         messages: list[dict] = [{"role": "user" if h["role"] == "user" else "assistant", "content": h["text"]}
                                 for h in (history or [])]
-        messages.append({"role": "user", "content": prompt})
+        if image:  # (bytes, mime type): only the fridge photo, only when someone taps
+            import base64
+            messages.append({"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": image[1],
+                                             "data": base64.b64encode(image[0]).decode()}},
+                {"type": "text", "text": prompt}]})
+        else:
+            messages.append({"role": "user", "content": prompt})
         all_tools = list(tools)
         if web_search:  # Claude searches the web itself (server-side); results come back with real links
             all_tools.append({"type": "web_search_20250305", "name": "web_search", "max_uses": 5,
@@ -78,7 +86,8 @@ class GeminiProvider:
     supports_web_search = False  # Gemini: product suggestions link to an Amazon search instead of a page
 
     def chat(self, system: str, tools: list[dict], prompt: str, on_tool: ToolCallback, deep: bool = False,
-             history: list[dict] | None = None, web_search: bool = False) -> str:
+             history: list[dict] | None = None, web_search: bool = False,
+             image: tuple[bytes, str] | None = None) -> str:
         from google.genai import types
 
         config = types.GenerateContentConfig(
@@ -92,7 +101,8 @@ class GeminiProvider:
         )
         contents = [types.Content(role="user" if h["role"] == "user" else "model", parts=[types.Part(text=h["text"])])
                     for h in (history or [])]
-        contents.append(types.Content(role="user", parts=[types.Part(text=prompt)]))
+        parts = [types.Part.from_bytes(data=image[0], mime_type=image[1])] if image else []
+        contents.append(types.Content(role="user", parts=parts + [types.Part(text=prompt)]))
         for _ in range(MAX_STEPS):
             resp = self.client.models.generate_content(
                 model=self.model_deep if deep else self.model, contents=contents, config=config,

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>This week on the fridge</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="week.css">
+</head>
+<body class="week-page">
+  <main id="main" class="week-wrap">
+    <div class="no-print sheet-bar">
+      <a href="./#home" class="btn btn-secondary btn-small">Back to Life OS</a>
+      <span class="btn-row">
+        <button type="button" class="btn btn-secondary btn-small" id="week-prev">Week before</button>
+        <button type="button" class="btn btn-secondary btn-small" id="week-next">Week after</button>
+        <button type="button" class="btn btn-primary btn-small" id="week-print">Print</button>
+      </span>
+    </div>
+    <p id="week-status" role="status" aria-live="polite">Loading the week...</p>
+    <article id="week" hidden>
+      <h1 id="week-title"></h1>
+      <div class="week-grid" id="week-days"></div>
+      <div class="week-foot">
+        <section aria-labelledby="week-rota-title" id="week-rota-block" hidden>
+          <h2 id="week-rota-title">Cleaning rota</h2>
+          <ul id="week-rota"></ul>
+        </section>
+        <section aria-labelledby="week-chores-title" id="week-chores-block" hidden>
+          <h2 id="week-chores-title">Chores</h2>
+          <ul id="week-chores"></ul>
+        </section>
+      </div>
+    </article>
+  </main>
+  <script src="week.js"></script>
+</body>
+</html>

@@ -1,5 +1,21 @@
 # What's new
 
+## 0.19.0
+Christmas: a budget for each person with ideas from Gift ideas, what's bought, what it cost and whether it's
+wrapped; the cards list; and the key dates (Royal Mail's last posting days, your own, and nativity, carol
+concerts and the like from the calendar), with a countdown on Today and the kitchen display. Phones sign in by
+scanning a code: Life OS icon at the top of the Mac's screen → Show household key. Settings → Updates and this
+computer → Set up phone access runs Tailscale for you and saves the address. Meter readings with a monthly
+reminder, read from Home Assistant where there's a meter sensor, and an email to the supplier in Gmail drafts.
+School kit: PE, packed lunch and other kit days, said at 6:30pm the night before (holidays skipped), and "lost
+something?". Garden: frost and watering warnings from the forecast, and the month's jobs. What can we make?: take a
+photo of the fridge (or type what's in it) for three dinners and what to buy. A weekly A4 sheet for the fridge
+door. A home contents list for the insurer, with photos and receipts. Documents: where each one is kept and when it
+expires ("Where's Leo's passport?" works on the speakers too).
+Fixes: add Google's sign-in file from Settings → Google accounts (choose the downloaded file, or paste the client
+ID and secret) instead of copying it into a hidden folder; the babysitter sheet printed as a blank page; a phone
+coming in through Tailscale is no longer treated as "this computer"; form mistakes now say so in words.
+
 ## 0.18.0
 Talk to Life OS on a Home Assistant Voice speaker: it's now a Home Assistant conversation agent (download the small
 integration from Settings > Voice and speakers) and keeps listening when it asks you a question back. Parcels from

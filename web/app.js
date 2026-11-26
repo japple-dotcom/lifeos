@@ -27,10 +27,13 @@
     p.setAttribute("d", "m5 12.5 4.5 4.5L19 7.5"); s.append(p); return s;
   };
 
-  // v0.18 screens live in more.js; it's told when a screen has loaded (and never stops this one if it fails)
+  // v0.18 screens live in more.js and v0.19 ones in extra.js; each is told when a screen has loaded (and never stops
+  // this one if it fails)
   function hook(name, data) {
-    try { const m = window.LifeOSMore; if (m && typeof m[name] === "function") m[name](data); }
-    catch (e) { console.warn("more.js", name, e); }
+    for (const [file, m] of [["more.js", window.LifeOSMore], ["extra.js", window.LifeOSExtra]]) {
+      try { if (m && typeof m[name] === "function") m[name](data); }
+      catch (e) { console.warn(file, name, e); }
+    }
   }
 
   let toastTimer;
@@ -71,7 +74,10 @@
     if (res.status === 401 && !opts.signingIn) throw new AuthError("Please sign in");
     let data = null;
     try { data = await res.json(); } catch { /* not json */ }
-    if (!res.ok) throw new Error((data && data.detail) || `Something went wrong (${res.status}).`);
+    if (!res.ok) {
+      const d = data && data.detail;
+      throw new Error(typeof d === "string" ? d : d ? "Something in that form isn't right. Check it and try again." : `Something went wrong (${res.status}).`);
+    }
     return data;
   }
   async function busy(button, fn) {
@@ -2629,10 +2635,27 @@
   }
   window.addEventListener("hashchange", () => { if (location.hash === "#add") { takeShared(); openShared(); } });
 
-  window.LifeOS = { $, el, api, toast, busy, openDialog, AuthError, shortDate, prefs };
+  window.LifeOS = { $, el, api, toast, busy, openDialog, AuthError, shortDate, prefs, attachments, loadMeals, localIso };
+
+  // A one-time sign-in link from the QR code on the Life OS computer: sign this phone in, then tidy the address
+  async function takeJoin() {
+    const params = new URLSearchParams(location.search);
+    const code = params.get("join");
+    if (!code) return;
+    params.delete("join");
+    history.replaceState(null, "", location.pathname + (params.toString() ? `?${params}` : "") + location.hash);
+    try {
+      const r = await api("/api/login", { method: "POST", body: { join: code }, signingIn: true });
+      toast(`Signed in as ${r.name}`);
+    } catch (e) {
+      joinProblem = e.message;
+    }
+  }
+  let joinProblem = "";
 
   async function boot() {
     takeShared();
+    try { await takeJoin(); } catch { /* the normal sign-in below takes over */ }
     try {
       const me = await api("/api/me");
       state.me = me; state.people = me.people;
@@ -2644,7 +2667,7 @@
       if (me.version) prefs.set("lastVersion", me.version);
       flushOutbox();
     } catch (e) {
-      if (e instanceof AuthError) showLogin();
+      if (e instanceof AuthError) { showLogin(); if (joinProblem) $("#login-error").textContent = joinProblem; }
       else {
         // Offline with something shared in: keep it on the phone rather than lose it
         try {

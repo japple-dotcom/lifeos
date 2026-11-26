@@ -60,3 +60,11 @@ class HomeAssistant:
                              params={"start": start, "end": end})
         r.raise_for_status()
         return r.json()
+
+    def service_response(self, domain_service: str, data: dict) -> dict:
+        """A service that answers (e.g. weather.get_forecasts): {entity_id: {...}}."""
+        domain, service = domain_service.split(".", 1)
+        r = self._client.post(f"{self.url}/api/services/{domain}/{service}?return_response", headers=self._headers,
+                              json=data)
+        r.raise_for_status()
+        return (r.json() or {}).get("service_response") or {}

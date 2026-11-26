@@ -357,6 +357,78 @@ typed from the certificate, or come in by themselves with the free DVSA MOT hist
 documentation.history.mot.api.gov.uk; put the client ID, client secret, API key and token URL in Settings → Keys
 and addresses). Each advisory goes on the to-do list with one tap.
 
+### Christmas (Home, from October)
+
+A budget for the whole of Christmas and for each person, ideas from **Gift ideas** (likes, sizes and wish list) with
+a link to look for each, what's been bought and what it cost, and **Mark wrapped**. The cards list ticks off sent and
+received. Key dates: Royal Mail's last posting days (2026: 2nd Class 18 December, Tracked 48 19 December, 1st Class
+21 December, Special Delivery 23 December), your own ("Order the turkey"), and school events found in the calendar
+(nativity, carol concert, Christmas jumper day). **Put the dates in our to-dos** files each once (one "post the
+cards" job, two days before the next posting date). Today and the kitchen display count down. Nothing is ordered.
+
+### Signing phones in by QR code
+
+On the Life OS computer, click the menu bar icon → **Show household key**. Under the key there's a code for each
+grown-up; point that person's phone camera at it and it opens Life OS signed in as them. Each code works once, for 10
+minutes, and the page only opens on that computer.
+
+### Phone access, set up by Life OS (Settings → Updates and this computer)
+
+**Set up phone access** runs `tailscale serve --bg http://127.0.0.1:8800` on the computer and saves the https address
+it gives as the address for phones, then restarts. If Tailscale needs HTTPS switched on for your network first, it
+shows Tailscale's own link to do that. Only on the Life OS computer itself; install Tailscale and sign in first.
+
+### Meter readings (Home)
+
+Electricity and gas to start with (add water if you're metered). Pick the Home Assistant sensor that counts each
+meter (an energy, gas or water total), or type readings in. On the day you choose (the 1st by default) at 9am, Life
+OS reads the sensors and sends one notification with what it read and what still needs typing. A reading lower than
+the last one is refused. **Put an email to the supplier in Gmail drafts** writes the reading out for you to send.
+
+### School kit (Home)
+
+For each child: PE days, packed-lunch days, and anything else on a fixed day (swimming bag, recorder, library book).
+At 6:30pm Sunday to Thursday one notification says what's needed tomorrow and whose PE kit to wash; Today, the
+kitchen display, the weekly sheet and "what kit tomorrow" on the speakers say the same. School closures (from
+emails, pasted term dates or settings) are skipped. **Lost something?** adds "Check lost property" for the next
+school day.
+
+### Garden (Home)
+
+Tick what the garden has (lawn, hedge, pots, veg, greenhouse, fruit trees). The forecast comes from Home
+Assistant's weather, or from Open-Meteo for your postcode (free, no key). At 7:30am: a frost warning when tonight
+goes to 1°C or below (September to May), and a watering nudge when three dry, warm days are coming (April to
+September), each at most every three days. The month's jobs, with **Add to to-dos**.
+
+### What can we make? (To-do → Dinners)
+
+Take a photo of the open fridge (and cupboard), or type what's in it. A photo goes to the active assistant once,
+shrunk on the phone, when you tap **Find dinners**; Life OS doesn't keep it. You get up to three dinners (ones you've
+rated well first), what each still needs, **Have it tonight** / **Tomorrow** (into the meal plan) and **Add to
+Shopping** (skipping cupboard staples and what's already on the list). A typed list needs no assistant: it's matched
+against dinners you've had before.
+
+### This week on the fridge (Home)
+
+**Print this week's sheet** opens one landscape A4 page (`/app/week.html`): each day's calendar, dinner, school kit,
+"put the bins out tonight" and birthdays, plus the cleaning rota and the kids' chores. From Saturday it shows the
+week ahead, and on Sunday at 6:45pm there's a notification with the link.
+
+### Home contents list (Home)
+
+Valuables room by room: what it is, what it would cost to replace, when it was bought, serial number, and photos or
+receipts attached. Totals by room and overall against the contents cover you type in, with a warning when the list
+is worth more than the cover and for single items over £1,500 (often needed on the policy by name). **Download the
+list as a spreadsheet** is what an insurer asks for after a break-in, fire or flood. Kept on the Life OS computer
+only.
+
+### Documents (Home)
+
+Passports, birth and marriage certificates, the will, deeds, policies, the V5C... whose each one is, where it's kept
+and its expiry date, with a photo or PDF if you like (kept on the computer only). An expiry date puts it on
+Renewals with a reminder well ahead (passports 9 months). Life OS refuses document numbers. "Where's Leo's
+passport?" works in the search box and on the speakers. None of it goes to the assistant or Google.
+
 ### Live test (Settings → Check everything)
 
 Runs every Gmail, Tasks and Calendar feature against each connected account: a test to-do in its own list
@@ -648,6 +720,14 @@ Tailscale gives you one for free; see Setup, step 2.
 > Want a real `.apk` later, for example for a Play Store listing? Tools such as Bubblewrap or PWABuilder can
 > wrap this same app as a Trusted Web Activity. They need the site reachable from the internet, so this is
 > optional and not needed for your own phones.
+
+### The Google sign-in file
+
+In Google Cloud (Google Auth Platform → Clients) create a client of type **Web application**, with
+`https://<your Tailscale address>/auth/google/callback` under **Authorised redirect URIs** (not JavaScript origins).
+Then in Life OS, **Settings → Google accounts → Add the Google sign-in file**: choose the JSON file Google gives you,
+or paste the client ID and secret. Add both of your Gmail addresses under **Audience → Test users** before
+connecting, and once you're both connected click **Publish app** there (otherwise Google signs you out every 7 days).
 
 ### Each person connects their own Google account
 
