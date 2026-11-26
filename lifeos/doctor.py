@@ -85,9 +85,10 @@ def check_google(svc) -> list[tuple[str, str]]:
                 msg += ", Gmail allowed"
             out.append((OK, msg + ")"))
         except Exception as e:
-            hint = " Reconnect in the app (Settings > Google accounts)." if "invalid_grant" in str(e) or "401" in str(e) \
+            from .aierrors import explain_google
+            hint = " Reconnect in the app (Settings > Google accounts)." if "401" in str(e) and "invalid_grant" not in str(e) \
                 else ""
-            out.append((FAIL, f"{st['name']}: Google error: {e}.{hint}"))
+            out.append((FAIL, f"{st['name']}: {explain_google(e)}{hint}"))
     return out
 
 

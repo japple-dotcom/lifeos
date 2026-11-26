@@ -533,3 +533,30 @@ def test_a_slow_assistant_never_holds_up_adding_a_job(svc, monkeypatch):
     assert time.time() - started < 2.5
     assert t["title"] == "Book the boiler service" and t["category"] != "Kids"
     assert any(e["kind"] == "ai_slow" for e in svc.store.recent_events(20))
+
+
+def test_google_api_switched_off_is_explained_with_the_link(svc):
+    from lifeos import aierrors
+    raw = ('<HttpError 403 when requesting https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100&alt=json '
+           'returned "Google Tasks API has not been used in project 686327691400 before or it is disabled. Enable it by '
+           'visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=686327691400 then '
+           'retry.". Details: "[{\'reason\': \'accessNotConfigured\'}]">')
+    msg = aierrors.explain_google(RuntimeError(raw))
+    assert msg.startswith("Google Tasks API is switched off")
+    assert "https://console.cloud.google.com/apis/library/tasks.googleapis.com?project=686327691400" in msg
+    cal = raw.replace("tasks.googleapis.com", "calendar-json.googleapis.com").replace("Google Tasks API", "Google Calendar API")
+    assert "calendar-json.googleapis.com?project=686327691400" in aierrors.explain_google(RuntimeError(cal))
+    assert "Reconnect" in aierrors.explain_google(RuntimeError("invalid_grant: Token has been expired or revoked."))
+
+    class Broken:
+        def add_task(self, *a, **k):
+            raise RuntimeError(raw)
+
+        def list_tasks(self, *a, **k):
+            raise RuntimeError(raw)
+    household_svc(svc)
+    svc.settings.behaviour["auto_solve"] = False
+    svc.google.people["me"] = svc.google.people["wife"] = Broken()
+    c = client_for(svc)
+    r = c.post("/api/todos", json={"text": "Buy bin bags"})
+    assert r.status_code == 503 and "switched off" in r.json()["detail"] and "<HttpError" not in r.json()["detail"]

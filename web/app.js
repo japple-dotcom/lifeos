@@ -2522,6 +2522,7 @@
       el("button", { type: "button", class: "btn btn-secondary btn-small", text: "Copy", "aria-label": "Copy the redirect address",
         onclick: async () => { try { await navigator.clipboard.writeText(acc.redirect_uri); toast("Copied"); } catch { toast("Couldn't copy. Select the address and copy it.", true); } } }),
       local ? el("p", { class: "hint", text: "This address only works on this computer. Phones need the Tailscale https address too." }) : null));
+    step(null, "In Google Cloud, switch on the Google Tasks API, Google Calendar API and Gmail API (APIs and Services, Library, then Enable on each), and add each person's Gmail under Google Auth Platform, Audience, Test users.");
     for (const a of acc.accounts) step(a.connected, `${a.name}'s Google account connected${a.connected ? (a.gmail ? " (with email)" : " (calendar and tasks)") : ""}`);
     if (acc.accounts.some((a) => a.connected)) step(null, "Once you're both connected, publish the app in Google Auth Platform (Audience, Publish app), then connect once more each. Google then stops asking every 7 days.");
     $("#google-checklist").replaceChildren(...steps);

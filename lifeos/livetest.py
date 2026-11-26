@@ -32,7 +32,8 @@ def _plain(e: Exception) -> str:
     if "insufficient" in low and "scope" in low or "403" in low and "permission" in low:
         return "Google didn't give Life OS permission for this. Reconnect the account and tick every box."
     if "has not been used in project" in low or "accessnotconfigured" in low or "api has not been used" in low:
-        return "This Google API isn't switched on in your Google Cloud project (README step 4)."
+        from .aierrors import explain_google
+        return explain_google(e)
     if "quota" in low or "rate limit" in low or "429" in low:
         return "Google is limiting requests just now. Try again in a few minutes."
     if "connecterror" in low or "timed out" in low or "name or service not known" in low:

@@ -24,7 +24,7 @@ from pydantic import BaseModel
 from . import approvals, oauth, sessions
 from .accounts import GoogleAccounts
 from .agent import Agent
-from . import (activity, adminhour, agenda, away, bills, bins, bridge, cars, childcare, christmas, deliveries, doctor,
+from . import (activity, adminhour, agenda, aierrors, away, bills, bins, bridge, cars, childcare, christmas, deliveries, doctor,
                energy, files, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles,
                recipes, scheduling, schoolkit, schoolrun, seasonal, shop, solver, todos, trades, trips, voice)
 from . import checklist as checklist_mod
@@ -416,7 +416,7 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
             try:
                 events = svc.google.events_all(days=1)
             except Exception as e:
-                warnings.append(f"Calendar: {e}")
+                warnings.append(f"Calendar: {aierrors.explain_google(e)}")
             try:
                 # The few jobs worth doing next (with their main action), then anything else due or overdue.
                 next_up = todos.next_up(svc)
@@ -426,7 +426,7 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                         tasks.append({**t, "overdue": t["days"] is not None and t["days"] < 0})
                 tasks = tasks[:8]
             except Exception as e:
-                warnings.append(f"To-dos: {e}")
+                warnings.append(f"To-dos: {aierrors.explain_google(e)}")
         else:
             warnings.append("No Google account connected yet. Go to Settings to connect one.")
         return {"name": name_of(person), "events": events, "tasks": tasks,
@@ -471,7 +471,7 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
             return todos.add_todo(svc, agent, text, added_by=person)
         except Exception as e:
             log.exception("add todo failed")
-            raise HTTPException(503, f"Couldn't add that just now: {e}") from e
+            raise HTTPException(503, f"Couldn't add that just now: {aierrors.explain_google(e)}") from e
 
     def _todo_change(fn):
         need_google()

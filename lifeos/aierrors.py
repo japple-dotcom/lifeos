@@ -53,3 +53,32 @@ def explain(e: Exception, provider: str = "") -> str:
     if code >= 500:
         return f"{who} had a problem on its side. Try again in a few minutes."
     return f"{who} couldn't answer ({name}: {msg[:120]})."
+
+
+# ---------- Google's errors, in plain English ----------
+_APIS = {"tasks": ("Google Tasks", "tasks.googleapis.com"), "calendar": ("Google Calendar", "calendar-json.googleapis.com"),
+         "gmail": ("Gmail", "gmail.googleapis.com")}
+
+
+def explain_google(e: Exception) -> str:
+    """What to do about a Google error: an API switched off in the Cloud project, a sign-in that's expired, or the
+    error as Google gave it (shortened)."""
+    import re
+    msg = str(e) or type(e).__name__
+    low = msg.lower()
+    if "accessnotconfigured" in low or "has not been used in project" in low or "it is disabled" in low:
+        m = re.search(r"project[ =](\d{6,20})", msg)
+        project = m.group(1) if m else ""
+        which = next((v for k, v in _APIS.items() if f"{k}.googleapis.com" in low or f"google {k} api" in low
+                      or (k == "calendar" and "calendar-json" in low)), None)
+        name, api = which or ("A Google", "")
+        link = (f"https://console.cloud.google.com/apis/library/{api}" + (f"?project={project}" if project else "")) \
+            if api else "https://console.cloud.google.com/apis/library"
+        return (f"{name} API is switched off in your Google Cloud project. Open {link}, click Enable, wait a couple "
+                f"of minutes and try again (Google Tasks, Google Calendar and Gmail all need to be on).")
+    if "invalid_grant" in low or "token has been expired or revoked" in low:
+        return "The Google sign-in has expired. Reconnect in Settings, Google accounts."
+    if "insufficient" in low and "scope" in low:
+        return "Google didn't give Life OS permission for that. Reconnect in Settings, Google accounts, and tick the boxes."
+    m = re.search(r'returned "([^"]{1,200})', msg)
+    return m.group(1) if m else msg[:200]
