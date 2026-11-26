@@ -20,7 +20,8 @@ class ClaudeProvider:
         if client is None:
             import anthropic
 
-            client = anthropic.Anthropic(api_key=api_key)
+            # never hang: a request that hasn't answered in 2 minutes fails (the SDK's own default is 10)
+            client = anthropic.Anthropic(api_key=api_key, timeout=120.0, max_retries=2)
         self.client, self.model, self.model_deep = client, model, model_deep
 
     @staticmethod
@@ -80,7 +81,11 @@ class GeminiProvider:
         if client is None:
             from google import genai
 
-            client = genai.Client(api_key=api_key)
+            try:
+                from google.genai import types as gtypes
+                client = genai.Client(api_key=api_key, http_options=gtypes.HttpOptions(timeout=120_000))
+            except (ImportError, TypeError, AttributeError):  # an older google-genai without timeouts
+                client = genai.Client(api_key=api_key)
         self.client, self.model, self.model_deep = client, model, model_deep
 
     supports_web_search = False  # Gemini: product suggestions link to an Amazon search instead of a page

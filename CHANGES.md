@@ -13,7 +13,8 @@ photo of the fridge (or type what's in it) for three dinners and what to buy. A 
 door. A home contents list for the insurer, with photos and receipts. Documents: where each one is kept and when it
 expires ("Where's Leo's passport?" works on the speakers too).
 Fixes: add Google's sign-in file from Settings → Google accounts (choose the downloaded file, or paste the client
-ID and secret) instead of copying it into a hidden folder; the babysitter sheet printed as a blank page; a phone
+ID and secret) instead of copying it into a hidden folder; adding a to-do no longer sits on "Sorting it…" when the
+assistant is slow or out of credit (after 20 seconds it's filed by Life OS's own rules); the babysitter sheet printed as a blank page; a phone
 coming in through Tailscale is no longer treated as "this computer"; form mistakes now say so in words.
 
 ## 0.18.0

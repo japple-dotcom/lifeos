@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
+import threading
+from concurrent.futures import TimeoutError as AITimeout
 from datetime import date, timedelta
 
 from .household import add_months, today_local
@@ -89,34 +92,58 @@ def _context(svc) -> str:
             f"Active projects: {projects}\n")
 
 
+_AI_POOL = None
+
+
 def _ask_ai_for_tool(svc, agent, tool: dict, system: str, prompt: str, web_search: bool = False,
-                     image: tuple[bytes, str] | None = None) -> dict | None:
-    """Runs one small AI request that must answer by calling `tool`. Returns its arguments, or None."""
+                     image: tuple[bytes, str] | None = None, wait: float | None = None) -> dict | None:
+    """Runs one small AI request that must answer by calling `tool`. Returns its arguments, or None.
+
+    Never keeps a person waiting: if the assistant hasn't answered within `wait` seconds (20 by default, 45 with web
+    search or a photo) the caller uses its rules instead, and a late answer is ignored."""
+    global _AI_POOL
     if agent is None or getattr(agent, "provider", None) is None:
         return None
     limit = svc.settings.max_runs_per_day
     if limit and hasattr(agent, "runs_today") and agent.runs_today() >= limit:
         return None
     captured: dict = {}
+    done = threading.Event()
 
     def on_tool(name, args):
-        if name == tool["name"]:
+        if name == tool["name"] and not done.is_set():
             captured.update(args or {})
             return json.dumps({"ok": True}), False
         return "Only save the result.", True
 
-    svc.store.log_event("agent_start:sort", prompt[:300])  # counts towards the daily AI cap
-    try:
+    def call():
         if web_search:
             agent.provider.chat(system, [tool], prompt, on_tool, web_search=True)
         elif image:
             agent.provider.chat(system, [tool], prompt, on_tool, image=image)
         else:
             agent.provider.chat(system, [tool], prompt, on_tool)
+
+    svc.store.log_event("agent_start:sort", prompt[:300])  # counts towards the daily AI cap
+    if wait is None:
+        wait = float(os.getenv("LIFEOS_AI_WAIT_SECONDS", "45" if (web_search or image) else "20"))
+    if _AI_POOL is None:
+        from concurrent.futures import ThreadPoolExecutor
+        _AI_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ai-tool")
+    future = _AI_POOL.submit(call)
+    try:
+        future.result(timeout=wait)
+    except AITimeout:
+        done.set()
+        log.warning("The assistant took more than %ss; using rules instead.", wait)
+        svc.store.log_event("ai_slow", f"{tool['name']}: no answer in {wait:g}s")
+        return None
     except Exception as e:
         log.warning("AI sorting failed, using rules instead: %s", e)
         return None
-    return captured or None
+    finally:
+        done.set()
+    return dict(captured) or None
 
 
 def triage(svc, agent, text: str) -> dict:

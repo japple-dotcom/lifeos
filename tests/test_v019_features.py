@@ -510,3 +510,26 @@ def test_v019_screens_ship_with_the_app():
     extra = (ROOT / "web" / "extra.js").read_text()
     assert ".innerHTML" not in extra and "window.LifeOSExtra" in extra
     assert "window.LifeOSExtra" in (ROOT / "web" / "app.js").read_text()
+
+
+def test_a_slow_assistant_never_holds_up_adding_a_job(svc, monkeypatch):
+    import time
+
+    from lifeos import todos
+    from lifeos.agent import Agent
+    household_svc(svc)
+    svc.settings.behaviour["auto_solve"] = False
+
+    class Slow:
+        def chat(self, system, tools, prompt, on_tool, **kw):
+            time.sleep(3)
+            on_tool("save_triage", {"title": "Too late", "category": "Kids"})
+            return ""
+    agent = Agent(svc, client=ScriptedClaude([]))
+    agent.provider = Slow()
+    monkeypatch.setenv("LIFEOS_AI_WAIT_SECONDS", "0.5")
+    started = time.time()
+    t = todos.add_todo(svc, agent, "Book the boiler service")
+    assert time.time() - started < 2.5
+    assert t["title"] == "Book the boiler service" and t["category"] != "Kids"
+    assert any(e["kind"] == "ai_slow" for e in svc.store.recent_events(20))
