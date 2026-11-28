@@ -1020,12 +1020,14 @@ def test_email_send_reply_chase_and_book(svc):
     assert "works for me" in svc.store.get_request(r["id"])["reply_snippet"]
     item = next(x for x in todos.list_todos(svc) if x["id"] == t["id"])
     assert item["request"]["greet"] == "Dave" and item["request"]["contact_favourite"]
-    b = client.post(f"/api/requests/{r['id']}/book", json={"start": "2026-11-26T08:00:00", "duration_min": 120,
+    from datetime import date as _date, timedelta as _td
+    thu = _date.today() + _td(days=(3 - _date.today().weekday()) % 7 or 7)  # the next Thursday (never in the past)
+    b = client.post(f"/api/requests/{r['id']}/book", json={"start": f"{thu.isoformat()}T08:00:00", "duration_min": 120,
                                                              "confirm_body": "Hello Dave,\n\nThursday at 8am is great."}).json()
-    assert b["status"] == "booked" and b["appointment"]["label"] == "Thursday 26 November, 8am to 10am"
+    assert b["status"] == "booked" and b["appointment"]["label"] == f"Thursday {thu.day} {thu:%B}, 8am to 10am"
     assert b["appointment"]["confirmed"] and svc.google.people["me"].sent_threads[r["thread_id"]]["count"] == 3
     item = next(x for x in todos.list_todos(svc) if x["id"] == t["id"])
-    assert item["due"] == "2026-11-26" and item["next_action"].startswith("Spark Electrical (Dave Hughes) coming Thursday")
+    assert item["due"] == thu.isoformat() and item["next_action"].startswith("Spark Electrical (Dave Hughes) coming Thursday")
     events = svc.google.get().events(days=400)
     assert any(e["summary"].startswith("Electrician: Spark Electrical (Dave Hughes) (") and e["summary"].endswith(" in)")
                for e in events)  # says who'll be in

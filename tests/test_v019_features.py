@@ -560,3 +560,26 @@ def test_google_api_switched_off_is_explained_with_the_link(svc):
     c = client_for(svc)
     r = c.post("/api/todos", json={"text": "Buy bin bags"})
     assert r.status_code == 503 and "switched off" in r.json()["detail"] and "<HttpError" not in r.json()["detail"]
+
+
+def test_every_scheduled_job_can_be_set_up(svc):
+    """The app's start-up schedules every job; a bad time (like "sun-thu") must fail here, not on someone's Mac."""
+    from lifeos import scheduler
+    from lifeos.agent import Agent
+    sched = scheduler.start_scheduler(Agent(svc, client=ScriptedClaude([])))
+    try:
+        ids = {j.id for j in sched.get_jobs()}
+        assert {"school_kit", "garden", "meters", "week_sheet", "bins", "renewals"} <= ids
+        kit = sched.get_job("school_kit").trigger
+        fires = []
+        when = None
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        when = datetime(2026, 11, 30, 12, tzinfo=ZoneInfo("Europe/London"))  # a Monday
+        for _ in range(7):
+            when = kit.get_next_fire_time(None, when)
+            fires.append(when.strftime("%a"))
+            when = when.replace(hour=19)
+        assert fires == ["Mon", "Tue", "Wed", "Thu", "Sun", "Mon", "Tue"]
+    finally:
+        sched.shutdown(wait=False)

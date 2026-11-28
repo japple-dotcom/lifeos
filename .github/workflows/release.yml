@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt ruff
       - run: ruff check .
-      - run: python -m pytest -q tests/test_lifeos.py tests/test_app_packaging.py
+      - run: python -m pytest -q tests/test_lifeos.py tests/test_app_packaging.py tests/test_v019_features.py
 
   build:
     needs: test
@@ -93,7 +93,7 @@ jobs:
           "$APP" --headless --home "$H" --port 8841 > "$RUNNER_TEMP/run2.log" 2>&1 &
           PID=$!
           for _ in $(seq 1 90); do curl -fsS http://127.0.0.1:8841/health > /dev/null 2>&1 && break; sleep 2; done
-          curl -fsS http://127.0.0.1:8841/health
+          curl -fsS http://127.0.0.1:8841/health || { echo "::error::the app didn't start"; cat "$RUNNER_TEMP/run2.log"; exit 1; }
           echo
           ok=1
           # (download to a file first: grep -q stops reading early, and pipefail then counts curl's write as a failure)

@@ -367,8 +367,9 @@ def list_todos(svc, include_projects: bool = True) -> list[dict]:
                 "added": (m.get("created_at") or "")[:10],
             })
     order = {"now": 0, "this_week": 1, "this_month": 2, "later": 3, "someday": 4}
-    out.sort(key=lambda x: (order[x["bucket"]], x["days"] if x["days"] is not None else 99, x["priority"],
-                            x["effort_min"]))
+    # urgent things first within "now" (a leak with no date beats a hedge that's due today)
+    out.sort(key=lambda x: (order[x["bucket"]], x["priority"] if x["bucket"] == "now" else 0,
+                            x["days"] if x["days"] is not None else 99, x["priority"], x["effort_min"]))
     return out
 
 

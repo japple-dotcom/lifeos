@@ -107,7 +107,7 @@ def start_scheduler(agent) -> BackgroundScheduler:
              CronTrigger(day_of_week="mon", hour=6, minute=45, timezone=s.tz)),
             # v0.19
             ("school_kit", _safe("school kit", lambda: schoolkit.evening(v)),
-             CronTrigger(day_of_week="sun-thu", hour=18, minute=30, timezone=s.tz)),
+             CronTrigger(day_of_week="sun,mon,tue,wed,thu", hour=18, minute=30, timezone=s.tz)),
             ("garden", _safe("garden", lambda: garden.morning(v)), CronTrigger(hour=7, minute=30, timezone=s.tz)),
             ("meters", _safe("meter readings", lambda: meters.monthly(v)), CronTrigger(hour=9, minute=0, timezone=s.tz)),
             ("week_sheet", _safe("week sheet", lambda: weeksheet.sunday(v)),
