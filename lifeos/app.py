@@ -25,7 +25,7 @@ from . import approvals, oauth, sessions
 from .accounts import GoogleAccounts
 from .agent import Agent
 from . import (activity, adminhour, agenda, aierrors, away, bills, bins, bridge, cars, childcare, christmas, deliveries, doctor,
-               energy, files, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles,
+               energy, files, guests, haggle, household, kidsmode, kidstuff, leaving, manual, money, offsite, party, profiles,
                recipes, scheduling, schoolkit, schoolrun, seasonal, shop, solver, todos, trades, trips, voice)
 from . import checklist as checklist_mod
 from .config import Settings, load_settings, setup_problems
@@ -865,7 +865,8 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
                 "stars": _safe_call(lambda: [{"kid": k["kid"], "total": k["total"], "target": k["target"]}
                                              for k in kidstuff.stars(svc)["kids"]], []),
                 "school_tomorrow": _safe_call(lambda: schoolkit.tomorrow(svc), None),
-                "christmas": _safe_call(lambda: christmas.wall(svc), None)}
+                "christmas": _safe_call(lambda: christmas.wall(svc), None),
+                "guests": _safe_call(lambda: guests.wall(svc), None)}
 
     # ---------- renewals ----------
     @app.get("/api/renewals")
@@ -1780,6 +1781,11 @@ def create_app(svc: Services | None = None, agent: Agent | None = None, run_sche
     from . import routes19
     routes19.add_routes(app, svc, agent, SimpleNamespace(
         current_person=current_person, name_of=name_of, need_google=need_google))
+
+    # ---------- v0.20: set-up check, brain dump, letters, email to-dos, tomorrow, freezer, boxes, guests, broken, routines ----------
+    from . import routes20
+    routes20.add_routes(app, svc, agent, SimpleNamespace(
+        current_person=current_person, current_kids=current_kids, need_google=need_google))
     return app
 
 

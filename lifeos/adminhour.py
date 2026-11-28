@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 
 from . import scheduling
+from .dates import fmt as _dfmt
 
 ADMIN_CATEGORIES = {"Admin and renewals", "Errands"}
 ADMIN_WORDS = ("form", "pay", "cancel", "renew", "insurance", "passport", "letter", "claim", "tax", "bill", "bank",
@@ -30,7 +31,7 @@ def candidates(svc, today: date | None = None) -> list[dict]:
     for r in svc.store.renewals():
         d = date.fromisoformat(r["due_date"])
         if 0 <= (d - today).days <= 30 and not any(r["name"].lower() in c["title"].lower() for c in out):
-            out.append({"title": f"Sort out {r['name']} (due {d.strftime('%-d %b')})", "id": f"renewal:{r['id']}", "list": "",
+            out.append({"title": f"Sort out {r['name']} (due {d.strftime(_dfmt('%-d %b'))})", "id": f"renewal:{r['id']}", "list": "",
                         "due": r["due_date"], "score": 40 - (d - today).days // 2, "kind": "renewal"})
     return sorted(out, key=lambda c: -c["score"])
 

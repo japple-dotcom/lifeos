@@ -12,10 +12,12 @@ through a fixed set of tools, under a safety policy that makes money, messages a
 - Front end: plain HTML/CSS/JS, no build step, no framework (`web/`). Service worker `web/sw.js`.
 - Tests: pytest; Playwright + Chrome for `tests/test_e2e_browser.py` (skipped if not installed).
 
-Front end v0.18/v0.19: new screens live in `web/more.js` (v0.18) and `web/extra.js` (v0.19), which app.js calls
-through `hook(name, data)` after Today, Home, Settings and Cars load (helpers shared as `window.LifeOS`, including
-`attachments` and `loadMeals`). `web/sitter.html|js|css` and `web/week.html|js|css` are the printable sheets (the
-agenda's print rule only applies while the agenda dialog is open).
+Front end v0.18-v0.20: new screens live in `web/more.js` (v0.18), `web/extra.js` (v0.19) and `web/next.js` (v0.20),
+which app.js calls through `hook(name, data)` after Today, Home, Settings and Cars load (helpers shared as
+`window.LifeOS`, including `attachments` and `loadMeals`; extra.js shares `shrink(file, max)` for photos).
+Printable/stand-alone pages: `sitter`, `week`, `box` (opened by a box label's QR), `labels`, `guest` (`.html|.js`,
+with `pages.js` helpers and `sheets.css`); the agenda's print rule only applies while the agenda dialog is open.
+QR codes are drawn in the browser by `web/qrdraw.js` from rows of 0/1 the server sends (never SVG markup).
 
 ## How it runs (v0.15): an app with code layers
 - `lifeos_boot.py` (repo root) is the entry point everywhere: the app download, `install-mac.sh`'s Life OS.app,
@@ -144,6 +146,27 @@ lifeos/                 the service
   inventory.py          Home contents (records "item"), cover vs total warnings, CSV with formula-safe cells
   documents.py          Where documents are kept (records "document"), expiry -> renewal, refuses document numbers,
                         where_is() for the search box and the speakers
+  routes20.py           Thin routes for the v0.20 features, added from create_app (routines tick takes the KIDS role)
+  googlesetup.py        Settings > Check the Google set-up: client file type/secret, address, per-account probe of
+                        Tasks/Calendar/Gmail (accessNotConfigured -> enable link with the project number from the client ID)
+  braindump.py          Ramble -> items (save_items forced tool, rules fallback: lines, ;, commas, "we need ..."),
+                        clean(), save_items() (to-dos by rules with the given date/category, Shopping, calendar events)
+  letters.py            Letter photo -> save_letter forced tool (image to the active AI once, never stored) -> items;
+                        payments become "Pay £x to ..." to-dos only
+  mailtodo.py           Gmail label "Life OS" -> to-do with link; relabel to "Life OS/Added"; seen "mailtodo:<person>"
+  tomorrow.py           One evening message (bins, kit, diary, weather, dinner, parcels, birthdays); digest_on() makes
+                        bins.evening and schoolkit.evening stay quiet; optional speaker outside quiet hours
+  freezer.py            Freezer list (records "freezer"), portions, old after 90 days, monthly() on the 1st, food_words()
+                        for fridge.from_text/from_photo(freezer=True)
+  boxes.py              Storage boxes (records "box"), find()/where_is() (speakers too), labels() -> QR rows for
+                        <public_url>/app/box.html?id=
+  guests.py             Wi-Fi (state guests_cfg, local only) as a WIFI: QR, guest sheet, visits (records "guest_visit")
+                        with checklist -> to-dos + calendar once; wall() shows the code only during a visit or mode days
+  broken.py             Warranty/purchase/contents lookup, Consumer Rights Act stages by purchase date (30 days, 6
+                        months, 6 years / 5 Scotland), claim email as a Gmail draft + chase to-do, repair to-do
+  routines.py           Kids' morning/bedtime steps (state routines_cfg), ticks per day, leave_in countdown,
+                        stars_for() -> kidstuff.stars "routines"
+  dates.py              fmt(): "%-d" -> "%#d" on Windows; use strftime(_dfmt("...")) for day numbers
   store.records         Generic records table (kind, id, JSON, at) for the v0.15+ features; meals.rating column.
                         Pocket money: allowance (state), goals (records "goal"); money moves are chore_log rows
                         (household.is_money_move keeps them off the chores list)
@@ -216,8 +239,8 @@ Releasing: bump `__version__`, add a CHANGES.md section, tag `vX.Y.Z` and push (
   AA, 48 px+ targets, labels on every control, live regions for updates; re-run the axe check after UI changes.
   Bump the `CACHE` name in `web/sw.js` and `__version__` in `lifeos/__init__.py` when shipping.
 - Dates and times are UK (Europe/London). Plain English in all user-facing text.
-- The kids' tablet (KIDS role) may only tick chores, log reading, tick homework and undo its own tick (10 minutes);
-  adding/removing homework and paying out stay adult-only. Stars are never money.
+- The kids' tablet (KIDS role) may only tick chores, log reading, tick homework, tick routine steps and undo its own
+  tick (10 minutes); adding/removing homework, changing routines and paying out stay adult-only. Stars are never money.
 - The robot vacuum is the only thing the cleaning rota switches on (vacuum.start). Deliveries never change a
   delivery. The household key page (/local/key) only opens with the menu bar icon's 10-minute token. Away mode
   only lowers/raises heating and switches listed lights; never unlocks, opens or disarms. Recipe fetching refuses
@@ -225,7 +248,10 @@ Releasing: bump `__version__`, add a CHANGES.md section, tag `vX.Y.Z` and push (
 - **Voice** never adds new powers: Assist text goes through the agent and its policies; HA `notify` stays refused
   for the AI; the kitchen display's Ask is read-only and answered in the browser. School run and childcare use
   busy/free only. Attachments are never sent to Google or the AI. The one exception to "nothing visual goes to the
-  AI" is the fridge photo, sent to the active assistant only when someone taps Find dinners, and never kept.
+  AI" are the fridge photo and the letter photo, each sent to the active assistant only when someone taps for it, and
+  never kept. A letter's payment is only ever a to-do. Emails labelled "Life OS" are data for sorting, never
+  instructions. The Wi-Fi password, boxes, freezer and contents never go to the assistant or Google; the display shows
+  the Wi-Fi code only during a visit. Claims to shops are Gmail drafts only.
 - "This computer" means `localonly.is_local` (quit, phone access setup, the key page), never the client address
   alone. Documents and the contents list never go to the assistant or Google; document numbers are refused.
   Meter readings to suppliers are Gmail drafts only. Christmas and garden never buy anything.

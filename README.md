@@ -429,6 +429,69 @@ and its expiry date, with a photo or PDF if you like (kept on the computer only)
 Renewals with a reminder well ahead (passports 9 months). Life OS refuses document numbers. "Where's Leo's
 passport?" works in the search box and on the speakers. None of it goes to the assistant or Google.
 
+### Brain dump and Snap a letter (Today, or "Lots to add, or a letter?" in Add)
+
+Type or paste everything on your mind; Life OS splits it into to-dos, shopping and calendar dates (with the
+assistant in one go, or by rules without it) and shows them with ticks, a kind and a date to change. Nothing is saved
+until **Add these**. **Snap a letter** reads a photo of a school letter, appointment card or bill the same way:
+dates, jobs, and any amount to pay as a "Pay £x to ..." to-do (never a payment). The photo goes to the active
+assistant once, shrunk on the phone, and isn't kept. Not for work or patient letters.
+
+### Email to to-do (Gmail)
+
+Give any email the label **Life OS** in Gmail (phone or computer). Every 10 minutes, 6am to 10pm, Life OS turns each
+one into a to-do with the sender and a link back to the email, and changes the label to **Life OS/Added**. The
+email's words are treated as data, never instructions. Needs Gmail ticked when the person connected.
+
+### The evening "Tomorrow" message (Settings → Notifications)
+
+One notification at 7pm (you choose 4pm to 10pm): bins to put out, school kit and PE washing, each grown-up's first
+appointment, what to wear for the weather (coats, umbrellas, sun cream), dinner, parcels due and birthdays. It can be
+said on the kitchen speaker too (never in quiet hours). While it's on, the separate bins and school kit evening
+notifications stay quiet. "What's on tomorrow?" on the speakers says the same.
+
+### Freezer (Home)
+
+What's in, how many portions, which drawer, since when. **Used one** takes a portion off. "What can we make?" counts
+the freezer list (tick box), and on the 1st of the month there's a nudge for anything in three months or more.
+"What's in the freezer?" works on the speakers.
+
+### Loft and garage boxes (Home)
+
+Number and name each box, say where it lives and list what's in it. **Print box labels** makes a sheet of labels with
+a QR code; scanning one with a phone signed in to Life OS opens that box's list (add things, mark things taken out).
+"Where are the Christmas lights?" works in the search box and on the speakers. Kept on the Life OS computer only.
+
+### Guests (Home)
+
+Save the Wi-Fi (network, password, WPA/WEP/none) and house notes; **Print the guest sheet** has the Wi-Fi as a code to
+scan. Add a visit for a room-ready checklist (bed, towels, drawer, bathroom, key, sheet), and **Put it in the to-dos
+and calendar** files what's left for the day before and a "Staying: name" calendar entry. The kitchen display shows
+the Wi-Fi code only during a visit or for the days you switch it on. The password never goes to the assistant or
+Google.
+
+### Something's broken (Home)
+
+Type what's broken: Life OS looks in warranties (from receipts), purchases and the contents list, and says where you
+stand under the Consumer Rights Act 2015 by when it was bought: within 30 days a full refund; up to six months one
+repair or replacement with the fault taken to be there from the start; after that a repair or replacement if it
+hasn't lasted as it reasonably should (you may need to show the fault); up to six years to claim (five in
+Scotland), against the shop, not the maker. **Write to the shop** puts the claim email in Gmail drafts and adds a
+chase-up to-do in a week; **Get it repaired** files a repair job (the tradespeople flow takes over). General
+information, not legal advice.
+
+### Kids' routines (kids' tablet → Routine; set up on Home)
+
+Picture checklists for the morning (teeth, dressed, breakfast, shoes, bag) and bedtime, changeable per child, with a
+"leave in 12 minutes" countdown in the morning. Finishing a routine earns a star on the star chart. The tablet can
+tick steps; changing them stays with grown-ups.
+
+### Check the Google set-up (Settings → Google accounts)
+
+Checks the sign-in file (Web application, with a secret), the address, each connected account's Google Tasks,
+Calendar and Gmail (finding a switched-off service), and lists the steps Google won't let it check (the redirect
+address, test users, publishing), each with a direct link built from your project number.
+
 ### Live test (Settings → Check everything)
 
 Runs every Gmail, Tasks and Calendar feature against each connected account: a test to-do in its own list

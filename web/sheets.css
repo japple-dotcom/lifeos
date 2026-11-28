@@ -1,0 +1,25 @@
+/* Box labels and the guest sheet: readable on a phone, tidy on paper. */
+.sheet-wrap { max-width: 60rem; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+.sheet-bar { display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: space-between; margin-bottom: 1rem; }
+.labels { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.8rem; }
+.label { display: flex; gap: 0.8rem; align-items: center; justify-content: space-between; border: 2px dashed var(--border);
+  border-radius: 12px; padding: 0.8rem 1rem; break-inside: avoid; background: #fff; color: #000; }
+.label h2 { margin: 0.1rem 0; font-size: 1.4rem; }
+.label p { margin: 0.15rem 0; }
+.label .label-no { font-weight: 800; font-size: 1.1rem; }
+.label .label-where { font-weight: 700; }
+.label .label-top, .label .label-hint { font-size: 0.9rem; color: #333; }
+.label svg { flex: 0 0 auto; }
+.guest-wifi { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: space-between;
+  border: 2px solid var(--accent); border-radius: 14px; padding: 1rem 1.2rem; }
+.guest-wifi h2 { margin-top: 0; }
+#guest-notes-list li { margin: 0.35rem 0; font-size: 1.1rem; }
+@media print {
+  @page { size: A4; margin: 10mm; }
+  .no-print, #labels-status, #guest-status { display: none !important; }
+  body { background: #fff; color: #000; }
+  .sheet-wrap { max-width: none; padding: 0; }
+  .labels { grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .label { border: 1px dashed #000; min-height: 55mm; }
+  .guest-wifi { border-color: #000; }
+}

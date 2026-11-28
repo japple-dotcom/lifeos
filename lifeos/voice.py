@@ -242,10 +242,21 @@ def quick_answer(svc, text: str) -> str:
         from . import schoolkit
         t = schoolkit.tomorrow(svc)
         return f"Tomorrow: {t['text']}." if t["items"] else "Nothing special to take to school tomorrow."
+    if re.search(r"\b(what'?s|what is|anything) in the freezer\b", low):
+        from . import freezer
+        it = freezer.items(svc)
+        if not it:
+            return "The freezer list is empty."
+        return "In the freezer: " + ", ".join(f"{i['name']}" + (f" ({i['portions']})" if int(i.get("portions") or 1) > 1
+                                                                 else "") for i in it[:12]) + "."
+    if re.search(r"\b(what'?s|what is) (on )?tomorrow\b|\btomorrow'?s (plan|message)\b", low):
+        from . import tomorrow
+        t = tomorrow.build(svc)
+        return t["text"] or "Nothing special tomorrow."
     m = re.search(r"\bwhere(?:'s| is| are) (?:the |our )?([a-z\- ]{3,30})", low)
     if m:
-        from . import documents
-        found = documents.where_is(svc, low)
+        from . import boxes, documents
+        found = documents.where_is(svc, low) or boxes.where_is(svc, low)
         if found:
             return found
         from . import manual

@@ -65,8 +65,9 @@ def start_scheduler(agent) -> BackgroundScheduler:
                   id="housekeeping", max_instances=1, coalesce=True)
     # v0.15: car dates weekly, subscription nudges daily, childcare gaps on Sunday evening, appliance cycles every
     # 10 minutes, cheap-time plugs every 5 minutes, and a morning check that whoever's in for a visit still is.
-    from . import (adminhour, agenda, away, bins, carcosts, care, cars, childcare, cleaning, deliveries, energy, garden,
-                   household, meters, money, offsite, party, schoolkit, schoolrun, seasonal, trades, trips, weeksheet)
+    from . import (adminhour, agenda, away, bins, carcosts, care, cars, childcare, cleaning, deliveries, energy, freezer,
+                   garden, household, mailtodo, meters, money, offsite, party, schoolkit, schoolrun, seasonal, tomorrow,
+                   trades, trips, weeksheet)
     v = agent.svc
     for job_id, fn, trig in (
             ("cars", _safe("cars", lambda: cars.weekly(v)), CronTrigger(day_of_week="mon", hour=6, minute=40, timezone=s.tz)),
@@ -111,7 +112,13 @@ def start_scheduler(agent) -> BackgroundScheduler:
             ("garden", _safe("garden", lambda: garden.morning(v)), CronTrigger(hour=7, minute=30, timezone=s.tz)),
             ("meters", _safe("meter readings", lambda: meters.monthly(v)), CronTrigger(hour=9, minute=0, timezone=s.tz)),
             ("week_sheet", _safe("week sheet", lambda: weeksheet.sunday(v)),
-             CronTrigger(day_of_week="sun", hour=18, minute=45, timezone=s.tz))):
+             CronTrigger(day_of_week="sun", hour=18, minute=45, timezone=s.tz)),
+            # v0.20
+            ("tomorrow", _safe("tomorrow message", lambda: tomorrow.evening(v)),
+             CronTrigger(minute="*/10", hour="16-21", timezone=s.tz)),
+            ("mail_todos", _safe("email to-dos", lambda: mailtodo.run(v, agent)),
+             CronTrigger(minute="3-59/10", hour="6-22", timezone=s.tz)),
+            ("freezer", _safe("freezer", lambda: freezer.monthly(v)), CronTrigger(hour=9, minute=5, timezone=s.tz))):
         sched.add_job(fn, trig, id=job_id, max_instances=1, coalesce=True)
     # Spoken announcements on a Google speaker (voice.announce in settings.yaml), e.g. the brief at 07:15 on weekdays.
     from . import voice

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Box labels · Life OS</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sheets.css">
+</head>
+<body class="labels-page">
+  <main id="main" class="sheet-wrap">
+    <div class="no-print sheet-bar">
+      <a href="./#home" class="btn btn-secondary btn-small">Back to Life OS</a>
+      <button type="button" class="btn btn-primary btn-small" id="labels-print">Print</button>
+    </div>
+    <h1 class="no-print">Box labels</h1>
+    <p id="labels-status" class="no-print" role="status" aria-live="polite">Making the labels...</p>
+    <div class="labels" id="labels"></div>
+  </main>
+  <script src="pages.js"></script>
+  <script src="qrdraw.js"></script>
+  <script src="labels.js"></script>
+</body>
+</html>

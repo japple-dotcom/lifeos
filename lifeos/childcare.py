@@ -12,6 +12,7 @@ import re
 from datetime import date, datetime, time, timedelta
 
 from . import scheduling
+from .dates import fmt as _dfmt
 
 COVER_WORDS = ("childcare", "holiday club", "club", "camp", "nanny", "childminder", "babysit", "grandma", "granny",
                "grandad", "grandpa", "nana", "nan's", "grandparents", "kids with", "children with", "playdate",
@@ -128,7 +129,7 @@ def gaps(svc, days: int = 56, today: date | None = None) -> list[dict]:
             if booked >= 2 * 3600:
                 who_busy.append(p)
         if adults and len(who_busy) == len(adults):
-            out.append({"date": d.isoformat(), "label": d.strftime("%a %-d %b"), "closed": closed[d], "busy": who_busy})
+            out.append({"date": d.isoformat(), "label": d.strftime(_dfmt("%a %-d %b")), "closed": closed[d], "busy": who_busy})
     return out
 
 
@@ -144,14 +145,14 @@ def grouped(gs: list[dict]) -> list[dict]:
             groups.append({"closed": g["closed"], "dates": [g["date"]], "busy": g["busy"]})
     for grp in groups:
         a, b = date.fromisoformat(grp["dates"][0]), date.fromisoformat(grp["dates"][-1])
-        grp["label"] = a.strftime("%a %-d %b") if a == b else f"{a.strftime('%a %-d')} to {b.strftime('%a %-d %b')}"
+        grp["label"] = a.strftime(_dfmt("%a %-d %b")) if a == b else f"{a.strftime(_dfmt('%a %-d'))} to {b.strftime(_dfmt('%a %-d %b'))}"
         grp["days"] = len(grp["dates"])
         grp["ask_text"] = _ask_text(grp, a, b)
     return groups
 
 
 def _ask_text(grp: dict, a, b) -> str:
-    when = a.strftime("%A %-d %B") if a == b else f"{a.strftime('%A %-d')} to {b.strftime('%A %-d %B')}"
+    when = a.strftime(_dfmt("%A %-d %B")) if a == b else f"{a.strftime(_dfmt('%A %-d'))} to {b.strftime(_dfmt('%A %-d %B'))}"
     return f"Hi, could you help with the children on {when}? We're both working and the school's closed. Thank you!"
 
 

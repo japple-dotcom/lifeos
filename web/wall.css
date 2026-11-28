@@ -80,3 +80,9 @@ html.wall main { max-width: none; padding: 2vh 2.5vw; min-height: 100dvh; }
 .star-days li { display: grid; justify-items: center; gap: 0.2rem; padding: 0.5rem 0.2rem; border: 2px solid var(--border); border-radius: 12px; }
 .star-days .d { font-weight: 700; }
 .star-days .s { color: var(--accent); font-size: 1.2rem; letter-spacing: 0.05em; min-height: 1.5rem; }
+.w-wifi { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.w-wifi svg { border-radius: 8px; }
+.routine-steps .routine-step { flex-direction: row; justify-content: flex-start; gap: 0.8rem; }
+.routine-step .routine-icon { font-size: 2rem; }
+.routine-step.is-done { opacity: 0.6; text-decoration: line-through; }
+.kid-countdown { font-size: 1.6rem; font-weight: 800; margin: 0.4rem 0; }

@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 import secrets
 from datetime import date, timedelta
+from .dates import fmt as _dfmt
 
 CHECKLIST = ["Candles and a lighter", "Cake knife", "Plates, cups and napkins", "Bin bags", "Party bags",
              "Music and a speaker", "First aid kit", "Guest list with parents' phone numbers",
@@ -46,7 +47,7 @@ def jobs(p: dict) -> list[dict]:
 def invite_text(p: dict, guest: str = "") -> str:
     d = _d(p["date"])
     rsvp = _d(p.get("rsvp_by") or (d - timedelta(days=7)).isoformat())
-    when = f"{d.strftime('%A %-d %B')}, {p.get('start', '')}" + (f" to {p['end']}" if p.get("end") else "")
+    when = f"{d.strftime(_dfmt('%A %-d %B'))}, {p.get('start', '')}" + (f" to {p['end']}" if p.get("end") else "")
     lines = [f"Hello{(' ' + guest) if guest else ''},", "",
              f"You're invited to {p['child']}'s {p['what']}!", "",
              f"When: {when.strip(', ')}"]
@@ -54,7 +55,7 @@ def invite_text(p: dict, guest: str = "") -> str:
         lines.append(f"Where: {p['venue']}")
     if p.get("theme"):
         lines.append(f"Theme: {p['theme']}")
-    lines += ["", f"Please let us know if you can come by {rsvp.strftime('%A %-d %B')}.", "", "Thank you!"]
+    lines += ["", f"Please let us know if you can come by {rsvp.strftime(_dfmt('%A %-d %B'))}.", "", "Thank you!"]
     return "\n".join(lines)
 
 

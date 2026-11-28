@@ -18,6 +18,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from .activity import normalise
+from .dates import fmt as _dfmt
 
 log = logging.getLogger("lifeos.care")
 
@@ -100,7 +101,7 @@ def predictions(svc, today: date) -> list[dict]:
         days = 0 if left <= 0 else round(left / per_day)
         if days > 21:
             continue
-        since_txt = f"since {date.fromisoformat(since[:10]).strftime('%-d %b')}" if since else "counted so far"
+        since_txt = f"since {date.fromisoformat(since[:10]).strftime(_dfmt('%-d %b'))}" if since else "counted so far"
         out.append({**base, "due": (today + timedelta(days=days)).isoformat(),
                     "confidence": "high" if left <= 3 else "medium",
                     "why": f"{len(cycles)} cycles {since_txt}; it's needed about every {every}."})

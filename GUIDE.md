@@ -177,6 +177,15 @@ are just for fun; pocket money still only comes from chores.
 - **Documents** (Home): where the passports and certificates are kept, and when they run out. Ask "Where's Leo's
   passport?" in the search box or on the kitchen speaker. Never type document numbers.
 - **Contents list** (Home): valuables room by room with a photo or receipt, for the insurance.
+- **Brain dump** (Today): type everything on your mind in one go; check the list it makes, then **Add these**.
+- **Snap a letter** (Today): photo of a school letter or appointment card; tick the dates and jobs to keep.
+- **Email to a to-do**: in Gmail, give the email the label **Life OS**.
+- **Tomorrow message**: one notification at 7pm with tomorrow's bins, kit, appointments, weather and dinner.
+- **Freezer** (Home): add what goes in; tap **Used one** when you take a portion out.
+- **Boxes** (Home): list what's in each loft or garage box, print the labels, scan a label to see inside.
+- **Guests** (Home): add a visit for a checklist; print the guest sheet with the Wi-Fi code.
+- **Something's broken** (Home): type what it is to see your rights and write to the shop (as a Gmail draft).
+- **Kids' routines**: on the tablet, tap **Routine**; each step ticks off, and a finished routine is a star.
 
 ## Parties, recipes and better prices
 
@@ -228,6 +237,7 @@ choose it under **Install an update file**.
 - **Google things missing**: Settings → Google accounts → Reconnect.
 - **Google says "access blocked" or "hasn't completed verification"**: in Google Cloud → Google Auth Platform →
   Audience → Test users, add your Gmail address, then Connect again.
+- **Not sure what's wrong with Google**: Settings → Google accounts → **Check the Google set-up**.
 - **No notifications**: Settings → Notifications → Send a test notification.
 - **Words too small**: Settings → Text size → Large or Extra large.
 - **"That household key is not right"**: on the Mac, click the Life OS icon at the top of the screen → **Show

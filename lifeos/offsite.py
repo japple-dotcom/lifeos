@@ -30,6 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import paths
+from .dates import fmt as _dfmt
 
 log = logging.getLogger("lifeos.offsite")
 
@@ -206,12 +207,12 @@ def run(svc, now: datetime | None = None, notify_on_problem: bool = True) -> dic
         ok, detail, _ = _check(target.read_bytes(), phrase, live)
         for old in sorted(dest.glob(f"lifeos-*{SUFFIX}"), reverse=True)[KEEP:]:
             old.unlink(missing_ok=True)
-        result = {"ok": ok, "at": time.time(), "when": now.strftime("%-d %b %Y, %H:%M"), "file": target.name,
+        result = {"ok": ok, "at": time.time(), "when": now.strftime(_dfmt("%-d %b %Y, %H:%M")), "file": target.name,
                   "size": len(blob), "detail": detail}
     except (BackupError, OSError, tarfile.TarError, sqlite3.Error) as e:
-        result = {"ok": False, "at": time.time(), "when": now.strftime("%-d %b %Y, %H:%M"), "detail": str(e)}
+        result = {"ok": False, "at": time.time(), "when": now.strftime(_dfmt("%-d %b %Y, %H:%M")), "detail": str(e)}
     except ImportError:
-        result = {"ok": False, "at": time.time(), "when": now.strftime("%-d %b %Y, %H:%M"),
+        result = {"ok": False, "at": time.time(), "when": now.strftime(_dfmt("%-d %b %Y, %H:%M")),
                   "detail": "Backups need the 'cryptography' package (pip install cryptography)."}
     svc.store.set_state("offsite_last", json.dumps(result))
     if not result["ok"] and notify_on_problem and svc.notifier:

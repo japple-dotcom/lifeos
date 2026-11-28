@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta
+from .dates import fmt as _dfmt
 
 log = logging.getLogger("lifeos.agenda")
 
@@ -41,7 +42,7 @@ def build(svc, today: date | None = None) -> dict:
     ]
     sections = [s for s in sections if s]
     count = next((len(s["items"]) for s in sections if s["title"] == "Decisions to make"), 0)
-    return {"title": f"Week of {start.strftime('%-d %B')}", "made": datetime.now().strftime("%a %-d %b, %H:%M"),
+    return {"title": f"Week of {start.strftime(_dfmt('%-d %B'))}", "made": datetime.now().strftime(_dfmt("%a %-d %b, %H:%M")),
             "sections": sections, "decisions": count}
 
 
@@ -57,7 +58,7 @@ def decisions(svc, today: date) -> list[dict]:
     from . import money
     for s in money.subscriptions(svc, today)["items"]:
         if s.get("nudged_for") == s.get("next_date") and s.get("status") not in ("keep", "cancelling"):
-            out.append(_i(f"Keep or cancel {s['service']}? (renews {date.fromisoformat(s['next_date']).strftime('%a %-d %b')})",
+            out.append(_i(f"Keep or cancel {s['service']}? (renews {date.fromisoformat(s['next_date']).strftime(_dfmt('%a %-d %b'))})",
                           "#tasks?sec=money"))
     for b in _bills(svc):
         if b.get("recent_rise"):
@@ -163,7 +164,7 @@ def later(svc, end: date, today: date) -> list[dict]:
     horizon = (today + timedelta(days=35)).isoformat()
     for r in svc.store.renewals():
         if end.isoformat() < r["due_date"] <= horizon:
-            out.append(_i(f"{r['name']}: {date.fromisoformat(r['due_date']).strftime('%-d %b')}", "#tasks?sec=renewals"))
+            out.append(_i(f"{r['name']}: {date.fromisoformat(r['due_date']).strftime(_dfmt('%-d %b'))}", "#tasks?sec=renewals"))
     for t in trips.trips(svc, today):
         if t["days_to_go"] > 0 and t["start"] <= horizon:
             out.append(_i(f"Trip: {t['name']} in {t['days_to_go']} days (packed {t['packed']} of {t['to_pack']})",
@@ -174,7 +175,7 @@ def later(svc, end: date, today: date) -> list[dict]:
     for p in profiles.profiles(svc):
         nb = profiles.next_birthday(p.get("birthday", ""), today) if p.get("birthday") else ""
         if nb and end.isoformat() < nb <= horizon:
-            out.append(_i(f"{p['name']}'s birthday: {date.fromisoformat(nb).strftime('%-d %b')}", "#home"))
+            out.append(_i(f"{p['name']}'s birthday: {date.fromisoformat(nb).strftime(_dfmt('%-d %b'))}", "#home"))
     return out
 
 

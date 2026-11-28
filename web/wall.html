@@ -56,6 +56,10 @@
         <p class="sub bins-line" id="w-bins" hidden></p>
         <p class="sub bins-line" id="w-kit" hidden></p>
         <p class="sub" id="w-xmas" hidden></p>
+        <div id="w-guests-block" class="w-guests" hidden>
+          <h2 class="spaced" id="w-guests-title">Wi-Fi for guests</h2>
+          <div class="w-wifi"><div id="w-wifi-qr"></div><p><span id="w-wifi-ssid"></span><br><span id="w-wifi-pass"></span><br><small>Point your camera at the code to join</small></p></div>
+        </div>
         <div id="w-parcels-block" hidden>
           <h2 class="spaced" id="w-parcels-title">Parcels</h2>
           <ul class="wlist" id="w-parcels" aria-labelledby="w-parcels-title"></ul>
@@ -76,6 +80,7 @@
     </div>
     <p class="updated" id="updated" aria-live="polite"></p>
   </main>
+  <script src="qrdraw.js" defer></script>
   <script src="wall.js" defer></script>
 </body>
 </html>

@@ -59,6 +59,8 @@ def test_bins_from_a_home_assistant_calendar_and_the_night_before(svc):
     assert bins.spoken(svc, t) == "Tonight: recycling and garden waste go out for tomorrow."
     from lifeos import voice
     early = datetime.combine(t, datetime.min.time(), voice._tz(svc)).replace(hour=18)
+    from lifeos import tomorrow
+    tomorrow.save(svc, on=False)  # the separate bins reminder (v0.20 folds it into one "Tomorrow" message)
     assert bins.evening(svc, early) == ""  # before 19:30
     late = early.replace(hour=19, minute=40)
     assert bins.evening(svc, late) == "Bins tonight: recycling and garden waste."

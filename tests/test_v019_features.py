@@ -246,6 +246,8 @@ def test_school_kit_the_evening_before_skipping_closures(svc):
     mon = next_weekday(today(svc), 0)
     t = schoolkit.tomorrow(svc, mon)
     assert t["text"] == "Ava PE kit, recorder" and t["wash"] == []
+    from lifeos import tomorrow
+    tomorrow.save(svc, on=False)  # the separate kit reminder (v0.20 folds it into one "Tomorrow" message)
     tue = mon + timedelta(days=1)
     assert schoolkit.tomorrow(svc, tue) == {"date": (tue + timedelta(days=1)).isoformat(),
                                              "items": [{"kid": "Leo", "what": "PE kit"}], "text": "Leo PE kit", "wash": ["Ava"]}
@@ -499,14 +501,14 @@ def test_google_sign_in_file_from_settings(svc, tmp_path):
 # ---------- the app ----------
 def test_v019_screens_ship_with_the_app():
     from lifeos import __version__
-    assert __version__ == "0.19.0"
+    assert __version__ >= "0.19.0"
     index = (ROOT / "web" / "index.html").read_text()
     for needed in ('src="extra.js"', 'id="xmas-block"', 'id="kit-block"', 'id="garden-block"', 'id="meters-block"',
                    'id="docs-block"', 'id="contents-block"', 'id="fridge-form"', 'href="week.html"', 'id="phone-access"',
                    'id="google-client"'):
         assert needed in index
     sw = (ROOT / "web" / "sw.js").read_text()
-    assert '"lifeos-shell-v23"' in sw and all(f'"{f}"' in sw for f in ("extra.js", "week.html", "week.js", "week.css"))
+    assert '"lifeos-shell-v2' in sw and all(f'"{f}"' in sw for f in ("extra.js", "week.html", "week.js", "week.css"))
     extra = (ROOT / "web" / "extra.js").read_text()
     assert ".innerHTML" not in extra and "window.LifeOSExtra" in extra
     assert "window.LifeOSExtra" in (ROOT / "web" / "app.js").read_text()
@@ -569,7 +571,8 @@ def test_every_scheduled_job_can_be_set_up(svc):
     sched = scheduler.start_scheduler(Agent(svc, client=ScriptedClaude([])))
     try:
         ids = {j.id for j in sched.get_jobs()}
-        assert {"school_kit", "garden", "meters", "week_sheet", "bins", "renewals"} <= ids
+        assert {"school_kit", "garden", "meters", "week_sheet", "bins", "renewals", "tomorrow", "mail_todos",
+                "freezer"} <= ids
         kit = sched.get_job("school_kit").trigger
         fires = []
         when = None

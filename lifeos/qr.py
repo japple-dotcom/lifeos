@@ -233,6 +233,8 @@ def matrix(text: str) -> list[list[bool]]:
 
 def svg(text: str, size: int = 280, label: str = "") -> str:
     """The QR code as an <svg> with a 4-module quiet zone, dark on white whatever the page's colours."""
+    import html
+    label = html.escape(label or "", quote=True)
     m = matrix(text)
     n = len(m) + 8
     path = "".join(f"M{c + 4},{r + 4}h1v1h-1z" for r, row in enumerate(m) for c, dark in enumerate(row) if dark)

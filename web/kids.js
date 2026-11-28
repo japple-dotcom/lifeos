@@ -15,8 +15,8 @@
   };
   const money = (v) => (v >= 1 ? `£${Number(v).toFixed(2)}` : `${Math.round(v * 100)}p`);
   const CHEERS = ["Brilliant!", "Nice one!", "Well done!", "Star!", "Great job!"];
-  let board = null, extras = null, current = localStorage.getItem("lifeos.kid") || "", mode = "chores";
-  const HEADINGS = { chores: "Who's done a chore?", reading: "Who's been reading?", homework: "Homework", stars: "This week's stars" };
+  let board = null, extras = null, routine = null, routineWhen = "", current = localStorage.getItem("lifeos.kid") || "", mode = "chores";
+  const HEADINGS = { routine: "Getting ready", chores: "Who's done a chore?", reading: "Who's been reading?", homework: "Homework", stars: "This week's stars" };
 
   async function api(path, body) {
     const res = await fetch(path, body ? { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
@@ -43,6 +43,7 @@
     $("#kids-tabs").hidden = mode === "stars";
     $("#kids-tabs").replaceChildren(...kids.map((k) => el("button", { type: "button", class: "kid-tab", "aria-pressed": String(k.kid === current),
       text: k.kid, onclick: () => { current = k.kid; try { localStorage.setItem("lifeos.kid", current); } catch { /* fine */ } render(); } })));
+    if (mode === "routine") { renderRoutine(); return; }
     if (mode !== "chores") { renderExtras(); return; }
     const k = kids.find((x) => x.kid === current);
     $("#kid-panel").replaceChildren(...[
@@ -61,6 +62,37 @@
           d.undo ? el("button", { type: "button", class: "ask-btn small", text: "Oops, undo", "aria-label": `Undo ${d.chore}`,
             onclick: async () => { try { await api("/api/kids/undo", { id: d.id }); cheer("Undone"); await load(); } catch (e) { cheer(e.message, true); } } })
             : el("span", { class: "t", text: new Date(d.at).toLocaleDateString("en-GB", { weekday: "short" }) }))))) : null].filter(Boolean));
+  }
+
+  function renderRoutine() {
+    if (!routine) { $("#kid-panel").replaceChildren(el("p", { text: "Loading..." })); return; }
+    const k = routine.kids.find((x) => x.kid === current) || routine.kids[0];
+    if (!k) { $("#kid-panel").replaceChildren(el("p", { text: "No routines yet." })); return; }
+    const when = routineWhen || routine.now;
+    const r = k[when];
+    const other = when === "morning" ? "bedtime" : "morning";
+    $("#kids-heading").textContent = when === "morning" ? "Getting ready for the day" : "Getting ready for bed";
+    $("#kid-panel").replaceChildren(...[
+      el("h2", { text: r.finished ? `${k.kid}: all done! ⭐` : `${k.kid}: ${r.done} of ${r.total} done` }),
+      when === "morning" && k.leave_in !== null ? el("p", { class: "kid-countdown", role: "timer", "aria-live": "off",
+        text: k.leave_in <= 0 ? "Time to go!" : `Leave in ${k.leave_in} minute${k.leave_in === 1 ? "" : "s"}` }) : null,
+      el("progress", { max: String(r.total || 1), value: String(r.done), "aria-label": `${r.done} of ${r.total} steps done` }),
+      el("div", { class: "kid-chores routine-steps", role: "group", "aria-label": `${k.kid}'s ${when} routine` }, r.steps.map((s) => el("button", {
+        type: "button", class: "kid-chore routine-step" + (s.done ? " is-done" : ""), "aria-pressed": String(s.done),
+        "aria-label": `${s.text}${s.done ? ", done" : ""}`,
+        onclick: async (ev) => {
+          ev.currentTarget.disabled = true;
+          try {
+            const res = await api("/api/routines/tick", { kid: k.kid, when, n: s.n, done: !s.done });
+            if (res.finished) cheer(`${CHEERS[Math.floor(Math.random() * CHEERS.length)]} All done: a star!`);
+            await loadRoutine();
+          } catch (e) { cheer(e.message, true); ev.currentTarget.disabled = false; }
+        } }, el("span", { class: "routine-icon", "aria-hidden": "true", text: s.icon }), el("span", { text: s.text })))),
+      el("button", { type: "button", class: "ask-btn", text: `Show the ${other} routine`, onclick: () => { routineWhen = other; render(); } })].filter(Boolean));
+  }
+  async function loadRoutine() {
+    try { routine = await api("/api/routines"); } catch { routine = null; }
+    if (mode === "routine") render();
   }
 
   const day = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
@@ -104,17 +136,18 @@
         el("progress", { max: String(s.target), value: String(Math.min(s.total, s.target)), "aria-label": `${s.kid}: ${s.total} of ${s.target} stars` }),
         el("ol", { class: "star-days" }, s.days.map((d) => el("li", { "aria-label": `${d.day}: ${d.stars} star${d.stars === 1 ? "" : "s"}` },
           el("span", { class: "d", text: d.day }), el("span", { class: "s", "aria-hidden": "true", text: d.stars ? "★".repeat(Math.min(d.stars, 6)) : "·" })))))),
-        el("p", { class: "hint", text: "A star for each chore, for 10 minutes of reading in a day, and for homework (two if it's done early)." }));
+        el("p", { class: "hint", text: "A star for each chore, for 10 minutes of reading in a day, for homework (two if it's done early), and for each morning or bedtime routine finished." }));
     }
   }
 
   async function load() {
     try { board = await api("/api/kids/board"); } catch { return; }
     try { extras = await api("/api/kids/extras"); } catch { extras = null; }
+    try { routine = await api("/api/routines"); } catch { routine = null; }
     $("#kids-login").hidden = true; $("#kids-app").hidden = false;
     render();
   }
-  document.querySelectorAll(".kid-mode").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.mode; render(); }));
+  document.querySelectorAll(".kid-mode").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.mode; routineWhen = ""; render(); }));
 
   $("#kids-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();

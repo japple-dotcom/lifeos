@@ -100,7 +100,10 @@ def tomorrow(svc, today: date | None = None) -> dict:
 
 
 def evening(svc, now: datetime | None = None) -> str:
-    """6:30pm: tomorrow's kit, and washing tonight's PE kit."""
+    """6:30pm: tomorrow's kit, and washing tonight's PE kit (unless the one "Tomorrow" message is on)."""
+    from . import tomorrow as tomorrow_msg
+    if tomorrow_msg.digest_on(svc):
+        return ""
     today = (now.date() if now else _today(svc))
     t = tomorrow(svc, today)
     if not t["items"] and not t["wash"]:

@@ -91,7 +91,17 @@ class DemoGoogle:
     def delete_event(self, event_id, calendar_id=None):
         self._events = [e for e in self._events if e.get("id") != event_id]
 
+    def relabel(self, ids, add=(), remove=()):
+        self.relabelled = getattr(self, "relabelled", []) + list(ids)
+        return len(ids)
+
     def search_mail(self, query, limit=15):
+        if "life-os" in query:  # email to to-do: one labelled email the first time
+            if getattr(self, "relabelled", None):
+                return []
+            return [{"id": "lm1", "from": "Hartley Solicitors <office@hartley.example>",
+                     "subject": "Re: Updating your wills", "snippet": "Please could you both sign and return the "
+                     "enclosed pages by the end of the month.", "link": "#"}]
         return [{"id": "m1", "from": "School Office", "subject": "Friday trip: reply needed",
                  "snippet": "Please confirm whether your child can attend the trip on Friday.", "link": "#"}]
 
@@ -252,7 +262,24 @@ class DemoAI:
     """A tiny rule-based stand-in for Claude / Gemini that uses the same tools and safety rules."""
     name = "demo"
 
-    def chat(self, system, tools, prompt, on_tool, deep=False, history=None):
+    def chat(self, system, tools, prompt, on_tool, deep=False, history=None, **kw):
+        forced = tools[0]["name"] if len(tools) == 1 else ""
+        if forced == "save_letter":  # a sample school letter, as if read from the photo
+            d = date.today()
+            on_tool(forced, {"readable": True, "sender": "Oakfield Primary School",
+                             "about": "Year 2 trip to the Royal Armouries: consent slip and £8.50 by next week.",
+                             "dates": [{"what": "Year 2 trip to the Royal Armouries (packed lunch)",
+                                        "date": (d + timedelta(days=12)).isoformat(), "time": "09:00"}],
+                             "todos": [{"text": "Return Ava's trip consent slip", "due": (d + timedelta(days=5)).isoformat()}],
+                             "payment": {"amount": 8.5, "pay_by": (d + timedelta(days=5)).isoformat(), "how": "ParentPay"}})
+            return "Saved."
+        if forced == "save_dinners" and kw.get("image"):
+            on_tool(forced, {"seen": ["chicken thighs", "peppers", "half a tub of cream", "spinach", "cheddar"],
+                             "dinners": [{"name": "Creamy chicken and spinach pasta", "uses": ["chicken thighs", "cream",
+                                          "spinach"], "missing": ["penne"], "minutes": 25},
+                                         {"name": "Chicken fajitas", "uses": ["chicken thighs", "peppers", "cheddar"],
+                                          "missing": ["tortilla wraps"], "minutes": 20}]})
+            return "Saved."
         text = prompt.split("] ", 1)[-1].strip()
         low = text.lower()
         m = re.search(r"add (.+?) to (?:the )?(shopping|kids|inbox|home maintenance)", low)
@@ -597,6 +624,28 @@ def build():
                                             ("Engagement ring", "Jewellery and watches", 2400, 4000, ""),
                                             ("Road bike", "Garage and shed", 950, 700, "WTU123456")):
         inventory.save_item(svc, name, room, value, (d - timedelta(days=back)).isoformat(), serial)
+
+    # v0.20: the freezer, storage boxes, guests, something's broken and the kids' routines
+    from lifeos import boxes, freezer, guests
+    for name, portions, where, back in (("Spaghetti bolognese", 3, "Top drawer", 20), ("Chicken curry", 2, "Top drawer", 104),
+                                        ("Frozen peas", 1, "Middle drawer", 40), ("Fish fingers", 1, "Middle drawer", 12),
+                                        ("Vanilla ice cream", 1, "Bottom drawer", 30)):
+        freezer.add(svc, name, portions, where, (d - timedelta(days=back)).isoformat())
+    boxes.save(svc, "Christmas decorations", "Loft", ["Christmas lights", "Tree baubles", "Wreath", "Advent calendar",
+                                                       "Tree skirt"])
+    boxes.save(svc, "Baby clothes", "Loft", ["Ava 0-3 months", "Leo 3-6 months", "Baby sling"])
+    boxes.save(svc, "Camping", "Garage", ["Tent", "Sleeping bags", "Camping stove", "Head torches", "Windbreak"])
+    guests.save(svc, ssid="Apple-Home", password="sample-wifi-pass", security="WPA",
+                notes="Heating: the thermostat is in the hall.\nHot water: the shower's pull cord is outside the door.\n"
+                      "Bins: black bin and recycling go out on Wednesday night.\nParking: the drive is fine.")
+    guests.add_visit(svc, "Grandma Pat", (d + timedelta(days=20)).isoformat(), (d + timedelta(days=23)).isoformat(),
+                     "Spare room", "No onions, likes a cup of tea first thing")
+    svc.store.add_renewal("Warranty: Bosch washing machine", (d + timedelta(days=500)).isoformat(), category="Warranty",
+                          notes=f"Bought from AO.com on {(d - timedelta(days=230)).isoformat()}. Receipt: https://mail.google.com/",
+                          remind_days=30, repeat_months=0)
+    svc.store.add_new("purchase", "demo-kettle", {"item": "Russell Hobbs kettle", "category": "household", "amount": 39.99,
+                                                  "shop": "Argos", "person": "me", "link": ""},
+                      at=(d - timedelta(days=21)).isoformat())
 
     # Watch for the (simulated) electrician's reply, as the real scheduler does every 30 minutes.
     import threading

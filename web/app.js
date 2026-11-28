@@ -30,7 +30,7 @@
   // v0.18 screens live in more.js and v0.19 ones in extra.js; each is told when a screen has loaded (and never stops
   // this one if it fails)
   function hook(name, data) {
-    for (const [file, m] of [["more.js", window.LifeOSMore], ["extra.js", window.LifeOSExtra]]) {
+    for (const [file, m] of [["more.js", window.LifeOSMore], ["extra.js", window.LifeOSExtra], ["next.js", window.LifeOSNext]]) {
       try { if (m && typeof m[name] === "function") m[name](data); }
       catch (e) { console.warn(file, name, e); }
     }

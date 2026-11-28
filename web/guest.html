@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guest sheet · Life OS</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sheets.css">
+</head>
+<body class="guest-page">
+  <main id="main" class="sheet-wrap">
+    <div class="no-print sheet-bar">
+      <a href="./#home" class="btn btn-secondary btn-small">Back to Life OS</a>
+      <button type="button" class="btn btn-primary btn-small" id="guest-print">Print</button>
+    </div>
+    <p id="guest-status" class="no-print" role="status" aria-live="polite">Making the sheet...</p>
+    <article id="guest-sheet" class="stack" hidden>
+      <h1 id="guest-title">Welcome!</h1>
+      <section id="guest-wifi" class="guest-wifi" aria-labelledby="gw-title" hidden>
+        <div>
+          <h2 id="gw-title">Wi-Fi</h2>
+          <p>Network: <strong id="gw-ssid"></strong></p>
+          <p id="gw-pass-line">Password: <strong id="gw-pass"></strong></p>
+          <p class="hint">Or point your phone's camera at the code to join.</p>
+        </div>
+        <div id="gw-qr"></div>
+      </section>
+      <section aria-labelledby="gn-title" id="guest-notes-block" hidden>
+        <h2 id="gn-title">Good to know</h2>
+        <ul id="guest-notes-list"></ul>
+      </section>
+    </article>
+  </main>
+  <script src="pages.js"></script>
+  <script src="qrdraw.js"></script>
+  <script src="guest.js"></script>
+</body>
+</html>

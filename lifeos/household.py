@@ -5,6 +5,7 @@ import calendar
 import logging
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
+from .dates import fmt as _dfmt
 
 log = logging.getLogger("lifeos.household")
 RENEWALS_LIST = "Admin and renewals"
@@ -17,7 +18,7 @@ def add_months(d: date, months: int) -> date:
 
 
 def uk_date(iso: str) -> str:
-    return datetime.strptime(iso, "%Y-%m-%d").strftime("%-d %b %Y")
+    return datetime.strptime(iso, "%Y-%m-%d").strftime(_dfmt("%-d %b %Y"))
 
 
 def today_local(settings) -> date:
@@ -141,7 +142,7 @@ def week_meals(svc, start: date | None = None, days: int = 7) -> list[dict]:
     for i in range(days):
         d = start + timedelta(days=i)
         m = saved.get(d.isoformat(), {})
-        out.append({"day": d.isoformat(), "label": d.strftime("%A %-d %B"), "dinner": m.get("dinner", ""),
+        out.append({"day": d.isoformat(), "label": d.strftime(_dfmt("%A %-d %B")), "dinner": m.get("dinner", ""),
                     "ingredients": m.get("ingredients", []), "notes": m.get("notes", "")})
     return out
 
@@ -358,7 +359,7 @@ def suggest_dinners(svc, start: date | None = None, days: int = 7) -> list[dict]
                 elif s.get("favourite"):
                     reasons.append("a favourite")
                 if s["last"]:
-                    reasons.append(f"not had since {date.fromisoformat(s['last']).strftime('%-d %b')}")
+                    reasons.append(f"not had since {date.fromisoformat(s['last']).strftime(_dfmt('%-d %b'))}")
                 if shared:
                     reasons.append(f"uses up the {', '.join(shared[:2])}")
                 if busy and _quick(s["name"], svc):

@@ -1,5 +1,22 @@
 # What's new
 
+## 0.20.0
+Getting things in faster. **Brain dump** (Today, or "Lots to add?" in Add): type or paste a long ramble and Life OS
+splits it into to-dos, shopping and calendar dates for you to check before anything's saved. **Snap a letter**: a
+photo of a school letter, appointment card or bill gives its dates, jobs and amount to pay to confirm (the photo goes
+to the assistant once and isn't kept; paying is only ever a to-do). **Email to to-do**: give an email the label
+"Life OS" in Gmail and it becomes a to-do with a link back. One evening **Tomorrow** message at 7pm (bins, school
+kit, first appointments, what to wear for the weather, dinner, parcels, birthdays) instead of separate ones, and
+"what's on tomorrow" on the speaker. **Freezer list**, counted by "What can we make?", with a nudge for anything in
+three months. **Loft and garage boxes** with printed QR labels that open the box's list, and "Where are the
+Christmas lights?". **Guests**: a Wi-Fi code to scan, a guest sheet to print, visits with a room-ready checklist,
+and the Wi-Fi on the kitchen display while they're staying. **Something's broken**: finds the warranty or receipt,
+explains your Consumer Rights Act position by date, and writes the claim to the shop as a Gmail draft (or files a
+repair job). **Kids' routines** on the tablet: morning and bedtime picture checklists, a "leave in 10 minutes"
+countdown, and a star for each one finished. **Check the Google set-up** in Settings checks each step and links
+straight to the fix.
+Fixes: dates with day numbers no longer break on Windows; QR code labels are escaped.
+
 ## 0.19.0
 Christmas: a budget for each person with ideas from Gift ideas, what's bought, what it cost and whether it's
 wrapped; the cards list; and the key dates (Royal Mail's last posting days, your own, and nativity, carol

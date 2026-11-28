@@ -141,16 +141,17 @@ def add_routes(app, svc, agent, d: SimpleNamespace) -> None:
 
     # ---------- the fridge ----------
     @app.post("/api/fridge/photo")
-    async def api_fridge_photo(request: Request, note: str = "", person: str = Depends(person_dep)):
+    async def api_fridge_photo(request: Request, note: str = "", freezer: bool = False,
+                               person: str = Depends(person_dep)):
         data = await request.body()
         try:
-            return fridge.from_photo(svc, agent, data, note)
+            return fridge.from_photo(svc, agent, data, note, freezer)
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
 
     @app.post("/api/fridge/text")
     def api_fridge_text(body: dict = BODY, person: str = Depends(person_dep)):
-        return _call(lambda: fridge.from_text(svc, str(body.get("text", ""))))
+        return _call(lambda: fridge.from_text(svc, str(body.get("text", "")), bool(body.get("freezer"))))
 
     @app.post("/api/fridge/have")
     def api_fridge_have(body: dict = BODY, person: str = Depends(person_dep)):

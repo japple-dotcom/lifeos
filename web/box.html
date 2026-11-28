@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Box · Life OS</title>
+  <meta name="theme-color" content="#0a5c53">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sheets.css">
+</head>
+<body class="box-page">
+  <main id="main" class="sheet-wrap stack">
+    <a href="./#home" class="btn btn-secondary btn-small">Back to Life OS</a>
+    <p id="box-status" role="status" aria-live="polite">Opening the box...</p>
+    <article id="box" class="stack" hidden>
+      <h1 id="box-title"></h1>
+      <p class="lead" id="box-where-line"></p>
+      <ul class="list" id="box-things" aria-label="In this box"></ul>
+      <form id="box-add" class="stack" novalidate>
+        <div class="field"><label for="box-add-items">Put more in this box</label><textarea id="box-add-items" rows="2" placeholder="One per line, or separated by commas"></textarea></div>
+        <button type="submit" class="btn btn-primary btn-block">Add to the box</button>
+      </form>
+      <details class="card">
+        <summary>Rename or move this box</summary>
+        <form id="box-edit" class="stack" novalidate>
+          <div class="field"><label for="box-edit-name">Box name</label><input id="box-edit-name" type="text" autocomplete="off"></div>
+          <div class="field"><label for="box-edit-where">Where it lives</label><select id="box-edit-where"></select></div>
+          <button type="submit" class="btn btn-secondary btn-block">Save changes</button>
+          <button type="button" class="btn btn-danger btn-block" id="box-delete">Delete this box from the list</button>
+        </form>
+      </details>
+      <a class="btn btn-secondary btn-block" id="box-label">Print this box's label</a>
+    </article>
+  </main>
+  <script src="pages.js"></script>
+  <script src="box.js"></script>
+</body>
+</html>

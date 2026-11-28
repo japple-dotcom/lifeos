@@ -217,6 +217,18 @@ class Google:
         ).execute()
         return len(message_ids)
 
+    def relabel(self, message_ids: list[str], add: tuple = (), remove: tuple = ()) -> int:
+        """Adds and removes labels by name (e.g. the person's "Life OS" label becomes "Life OS/Added")."""
+        if not message_ids:
+            return 0
+        body: dict = {"ids": list(message_ids)[:1000]}
+        if add:
+            body["addLabelIds"] = [self._label_id(n) for n in add]
+        if remove:
+            body["removeLabelIds"] = [self._label_id(n) for n in remove]
+        self._gmail().users().messages().batchModify(userId="me", body=body).execute()
+        return len(message_ids)
+
     def message_text(self, message_id: str, limit: int = 12000) -> str:
         """The plain text of an email (HTML-only emails are reduced to text)."""
         import re as _re

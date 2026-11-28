@@ -12,6 +12,7 @@ import re
 from datetime import date, datetime, time, timedelta
 
 from . import childcare, scheduling
+from .dates import fmt as _dfmt
 
 CLUB_WORDS = ("club", "football", "swimming", "dance", "ballet", "rugby", "cricket", "tennis", "gymnastics", "brownies",
               "beavers", "cubs", "scouts", "rainbows", "guides", "karate", "judo", "music lesson", "piano", "drama",
@@ -70,7 +71,7 @@ def week(svc, start: date | None = None, days: int = 7) -> list[dict]:
                 load[who] = load.get(who, 0) + 1
             day_runs.append({"kind": kind, "at": at, "who": who, "claimed": bool(claimed_by), "free": free,
                              "gap": not who, "club": club})
-        out.append({"date": d.isoformat(), "label": d.strftime("%a %-d %b"), "runs": day_runs})
+        out.append({"date": d.isoformat(), "label": d.strftime(_dfmt("%a %-d %b")), "runs": day_runs})
     return out
 
 

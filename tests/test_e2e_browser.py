@@ -833,3 +833,84 @@ def test_v019_christmas_kit_garden_meters_documents_contents_fridge_week(base_ur
     page.wait_for_function("document.querySelectorAll('.week-day').length === 7")
     assert not errors, errors
     ctx.close()
+
+
+def test_v020_brain_dump_letter_freezer_boxes_guests_broken_routines(base_url, browser):
+    """v0.20 on a phone: brain dump and a letter, the freezer, a box and its page, guests, something's broken,
+    Settings (Tomorrow message), and the kids' routine on the tablet."""
+    url, svc = base_url
+    ctx, page = _phone(browser)
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.on("dialog", lambda d: d.accept())
+    _sign_in(page, url)
+    # brain dump from Today
+    page.get_by_role("button", name="Brain dump").click()
+    page.get_by_label("Type or paste everything on your mind").fill("buy bin bags; fix the gate latch; swimming gala friday 5pm")
+    page.get_by_role("button", name="Sort it out").click()
+    page.get_by_role("button", name="Add these").wait_for()
+    assert page.locator("#dump-review li").count() == 3
+    page.get_by_role("button", name="Add these").click()
+    page.locator("#dump-review").filter(has_text="Added").wait_for()
+    # a letter (the demo assistant reads a sample school letter)
+    page.set_input_files("#letter-photo", files=[{"name": "letter.jpg", "mimeType": "image/jpeg",
+                                                   "buffer": b"\xff\xd8\xff\xe0" + b"\x00" * 300}])
+    page.locator("#dump-review h3").filter(has_text="Oakfield Primary School").wait_for()
+    assert page.get_by_role("checkbox", name="Pay £8.50 to Oakfield Primary School (ParentPay)", exact=True).is_checked()
+    page.get_by_role("button", name="Close").last.click()
+    page.goto(f"{url}/app/#home")
+    # freezer
+    page.locator("#freezer-list li").first.wait_for()
+    page.get_by_role("button", name="Used one portion of Spaghetti bolognese").click()
+    page.locator("#toast").filter(has_text="2 left").wait_for()
+    page.locator("#freezer-add summary").click()
+    page.get_by_label("What's going in?").fill("Leek soup")
+    page.get_by_role("button", name="Add to the freezer list").click()
+    page.locator("#freezer-list").filter(has_text="Leek soup").wait_for()
+    # boxes
+    page.get_by_label("Find something in a box").fill("where are the christmas lights")
+    page.get_by_role("button", name="Find it").click()
+    page.locator("#boxes-answer").filter(has_text="box 1").wait_for()
+    # guests
+    page.locator("#guests-summary").filter(has_text="Grandma Pat").wait_for()
+    page.get_by_role("button", name="Show Wi-Fi on the display").click()
+    page.locator("#toast").filter(has_text="3 days").wait_for()
+    # something's broken
+    page.get_by_label("What's broken?").fill("kettle")
+    page.get_by_role("button", name="Look it up").click()
+    page.locator("#broken-result").filter(has_text="full refund").wait_for()
+    page.get_by_label("What's wrong with the Russell Hobbs kettle?").fill("It won't switch on")
+    page.get_by_role("button", name="Write to the shop about the Russell Hobbs kettle").click()
+    page.locator("#toast").filter(has_text="Gmail drafts").wait_for()
+    # the box page
+    page.goto(f"{url}/app/#home")
+    page.get_by_role("link", name="Open box 1, Christmas decorations").click()
+    page.get_by_role("heading", level=1, name="Box 1: Christmas decorations").wait_for()
+    page.get_by_role("button", name="Took Wreath out of the box").click()
+    page.locator("#box-status").filter(has_text="off the list").wait_for()
+    # labels and the guest sheet draw their codes
+    page.goto(f"{url}/app/labels.html")
+    page.locator(".label svg").first.wait_for()
+    page.goto(f"{url}/app/guest.html")
+    page.locator("#gw-qr svg").wait_for()
+    assert page.locator("#gw-ssid").inner_text() == "Apple-Home"
+    # Settings: the Tomorrow message
+    page.goto(f"{url}/app/#settings")
+    page.locator("#tomorrow-setup summary").click()
+    page.locator("#tm-preview").filter(has_text=re.compile(".")).wait_for()
+    page.get_by_role("button", name="Save Tomorrow message").click()
+    page.locator("#toast").filter(has_text="Saved").wait_for()
+    assert not errors, errors
+    ctx.close()
+    # the kids' tablet: tick the routine
+    kctx = browser.new_context(viewport={"width": 1024, "height": 768}, locale="en-GB")
+    kp = kctx.new_page()
+    kp.on("pageerror", lambda e: errors.append(str(e)))
+    kp.goto(f"{url}/app/kids.html")
+    kp.get_by_label("Household key (a grown-up types this once)").fill("demo")
+    kp.get_by_role("button", name="Start").click()
+    kp.get_by_role("button", name="Routine").click()
+    kp.locator(".routine-step").first.click()
+    kp.wait_for_function("document.querySelector('.routine-step[aria-pressed=true]') !== null")
+    assert not errors, errors
+    kctx.close()

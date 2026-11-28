@@ -10,6 +10,7 @@ import re
 from datetime import date
 
 from .activity import normalise
+from .dates import fmt as _dfmt
 
 
 def _id(name: str) -> str:
@@ -153,5 +154,5 @@ def birthday_predictions(svc, today: date, days: int = 42, skip: set[str] | None
         wl = f" {len(p['wishlist'])} things on their wish list." if p.get("wishlist") else ""
         out.append({"pid": f"gift:{key}:{day.year}", "kind": "gift", "key": key, "title": f"Present for {p['name']}",
                     "due": (day - timedelta(days=7)).isoformat(), "confidence": "high", "interval_days": 365, "last": "",
-                    "why": f"{p['name']}'s birthday is {day.strftime('%A %-d %B')}.{likes}{wl}"})
+                    "why": f"{p['name']}'s birthday is {day.strftime(_dfmt('%A %-d %B'))}.{likes}{wl}"})
     return out

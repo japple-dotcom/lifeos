@@ -12,6 +12,7 @@ import re
 from datetime import date, timedelta
 
 from .mailreader import CATEGORIES
+from .dates import fmt as _dfmt
 
 PER_MONTH = {"weekly": 52 / 12, "monthly": 1.0, "yearly": 1 / 12}
 
@@ -104,7 +105,7 @@ def decide(svc, key: str, choice: str, person: str = "") -> dict:
     elif choice == "cancel":
         from . import todos
         when = s.get("next_date") or ""
-        title = f"Cancel {s['service']}" + (f" before {date.fromisoformat(when).strftime('%-d %b')}" if when else "")
+        title = f"Cancel {s['service']}" + (f" before {date.fromisoformat(when).strftime(_dfmt('%-d %b'))}" if when else "")
         how = s.get("manage_url") or ("https://www.google.com/search?q=" + "+".join(f"how to cancel {s['service']} UK".split()))
         todos.add_todo(svc, None, title, person or None, judged=todos.normalise(svc, {
             "title": title, "category": "Admin and renewals", "priority": 2, "effort_min": 10,

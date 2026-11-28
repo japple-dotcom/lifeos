@@ -14,7 +14,7 @@ from . import paths
 
 TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/heic": ".heic", "application/pdf": ".pdf"}
 MAX_BYTES = 15 * 1024 * 1024
-FOR = {"renewal", "manual", "bill", "trip", "item", "document"}
+FOR = {"renewal", "manual", "bill", "trip", "item", "document", "box"}
 MAGIC = {".jpg": [b"\xff\xd8\xff"], ".png": [b"\x89PNG"], ".webp": [b"RIFF"], ".pdf": [b"%PDF"], ".heic": [b"\x00\x00\x00"]}
 
 

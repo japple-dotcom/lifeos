@@ -472,3 +472,16 @@ pre.invite { white-space: pre-wrap; font: inherit; background: var(--accent-soft
 input[type="file"]:not(.visually-hidden) { font: inherit; min-height: var(--tap); width: 100%; color: var(--muted); }
 input[type="file"]::file-selector-button { font: inherit; font-weight: 650; min-height: var(--tap); padding: 0.5rem 1.1rem;
   margin-right: 0.75rem; border-radius: 14px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); cursor: pointer; }
+
+/* ---------- v0.20 ---------- */
+.today-quick { margin: 0.25rem 0 0.75rem; }
+.dump-list li { display: grid; gap: 0.35rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.dump-opts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.dump-opts select, .dump-opts input { min-height: var(--tap); }
+#freezer-list .is-old strong { color: var(--danger); }
+#boxes-answer:not(:empty) { font-weight: 700; padding: 0.5rem 0.75rem; background: var(--accent-soft); border-radius: 12px; }
+#gsetup-steps li { display: flex; gap: 0.6rem; align-items: flex-start; }
+#gsetup-steps .gs-icon { font-weight: 800; min-width: 1.4rem; text-align: center; }
+#gsetup-steps .gs-ok .gs-icon { color: var(--ok, #1a7f37); }
+#gsetup-steps .gs-problem .gs-icon { color: var(--danger); }
+#gsetup-steps code { word-break: break-all; background: var(--accent-soft); padding: 0.15rem 0.35rem; border-radius: 6px; }

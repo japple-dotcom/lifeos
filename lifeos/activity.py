@@ -17,6 +17,7 @@ import statistics
 from datetime import date, datetime, timedelta
 
 from .household import add_months, today_local
+from .dates import fmt as _dfmt
 
 log = logging.getLogger("lifeos.activity")
 
@@ -201,16 +202,16 @@ def predict(svc, today: date | None = None, on_lists: set[str] | None = None, op
             due = last + timedelta(days=round(med))
             add({"pid": f"shopping:{key}", "kind": "shopping", "key": key, "title": key.capitalize(),
                  "due": due.isoformat(), "confidence": conf, "interval_days": round(med), "last": last.isoformat(),
-                 "why": f"Bought {len(days)} times, about every {_every(med)}. Last: {last.strftime('%-d %b')}."})
+                 "why": f"Bought {len(days)} times, about every {_every(med)}. Last: {last.strftime(_dfmt('%-d %b'))}."})
         else:
             if (open_jobs and key in open_jobs) or any(_matches_checkup(c, title) for c in regular):
                 continue  # already on the list, or a regular check-up (predicted on its own schedule)
             if pat:
                 med, conf = pat
-                why = f"Done {len(days)} times, about every {_every(med)}. Last: {last.strftime('%-d %b %Y')}."
+                why = f"Done {len(days)} times, about every {_every(med)}. Last: {last.strftime(_dfmt('%-d %b %Y'))}."
             elif 330 <= (today - last).days <= 420:  # once, about a year ago: probably a yearly job
                 med, conf = 365.0, "low"
-                why = f"Last year you did this on {last.strftime('%-d %B')}."
+                why = f"Last year you did this on {last.strftime(_dfmt('%-d %B'))}."
             else:
                 continue
             due = last + timedelta(days=round(med))
@@ -229,7 +230,7 @@ def predict(svc, today: date | None = None, on_lists: set[str] | None = None, op
             due = add_months(last, c["every_months"])
             add({"pid": c["pid"], "kind": "checkup", "key": normalise(c["title"]), "title": c["title"],
                  "due": due.isoformat(), "confidence": "high", "interval_days": c["every_months"] * 30, "last": last.isoformat(),
-                 "why": f"Every {_every(c['every_months'] * 30.4)}. Last: {last.strftime('%-d %b %Y')}."})
+                 "why": f"Every {_every(c['every_months'] * 30.4)}. Last: {last.strftime(_dfmt('%-d %b %Y'))}."})
         else:
             add({"pid": c["pid"], "kind": "checkup", "key": normalise(c["title"]), "title": c["title"],
                  "due": today.isoformat(), "confidence": "low", "interval_days": c["every_months"] * 30, "last": "",
@@ -269,7 +270,7 @@ def birthdays(svc, today: date) -> list[dict]:
             continue
         out.append({"pid": f"gift:{normalise(who)}:{day.year}", "kind": "gift", "key": normalise(who),
                     "title": f"Present for {who}", "due": (day - timedelta(days=7)).isoformat(), "confidence": "high",
-                    "interval_days": 365, "last": "", "why": f"{who}'s birthday is {day.strftime('%A %-d %B')}."})
+                    "interval_days": 365, "last": "", "why": f"{who}'s birthday is {day.strftime(_dfmt('%A %-d %B'))}."})
     return out
 
 

@@ -31,8 +31,30 @@
         <button type="submit" class="btn btn-primary">Add</button>
       </div>
       <div id="add-result" role="status" aria-live="polite"></div>
+      <button type="button" class="btn btn-secondary btn-block" id="add-to-dump">Lots to add, or a letter?</button>
       <button type="button" class="btn btn-secondary btn-block" data-close>Close</button>
     </form>
+  </dialog>
+
+  <dialog id="dump-dialog" class="sheet" aria-labelledby="dump-title">
+    <div class="stack">
+      <h2 id="dump-title">Get it out of your head</h2>
+      <form id="dump-form" class="stack" novalidate>
+        <div class="field">
+          <label for="dump-text">Type or paste everything on your mind</label>
+          <p class="hint" id="dump-hint">One long ramble is fine. Life OS splits it into jobs, shopping and dates, and you check them before anything is saved.</p>
+          <textarea id="dump-text" rows="6" aria-describedby="dump-hint" placeholder="For example: book Leo's dentist check-up, we need oat milk and bin bags, parents' evening Thursday 6pm, fix the wobbly shelf"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sort it out</button>
+      </form>
+      <div class="field">
+        <label for="letter-photo">Or snap a letter</label>
+        <p class="hint" id="letter-hint">A school letter, appointment card or bill. The photo goes to the assistant once, to read, and isn't kept. Not for work or patient letters.</p>
+        <input id="letter-photo" type="file" accept="image/*" capture="environment" aria-describedby="letter-hint">
+      </div>
+      <div id="dump-review" class="stack" role="status" aria-live="polite"></div>
+      <button type="button" class="btn btn-secondary btn-block" data-close>Close</button>
+    </div>
   </dialog>
 
   <dialog id="edit-dialog" class="sheet" aria-labelledby="edit-title">
@@ -191,6 +213,10 @@
     <section id="view-today" class="view" aria-labelledby="today-title" hidden>
       <h1 id="today-title">Today</h1>
       <p class="lead" id="today-date"></p>
+      <div class="btn-row today-quick">
+        <button type="button" class="btn btn-secondary btn-small" id="today-dump">Brain dump</button>
+        <button type="button" class="btn btn-secondary btn-small" id="today-letter">Snap a letter</button>
+      </div>
       <div id="today-warnings"></div>
       <p class="notice bins-note" id="bins-tonight" role="status" hidden></p>
       <p class="notice bins-note" id="kit-tomorrow" role="status" hidden></p>
@@ -559,6 +585,7 @@
               <input id="fridge-photo" type="file" accept="image/*" capture="environment" aria-describedby="fridge-hint"></div>
             <div class="field"><label for="fridge-text">Or type what's there</label>
               <textarea id="fridge-text" rows="2" placeholder="For example: chicken, peppers, rice, half a tub of cream"></textarea></div>
+            <div class="check-row"><input type="checkbox" id="fridge-freezer" checked><label for="fridge-freezer">Count what's on the freezer list too</label></div>
             <button type="submit" class="btn btn-primary btn-block">Find dinners</button>
             <div id="fridge-result" class="stack" role="status" aria-live="polite"></div>
           </form>
@@ -821,7 +848,7 @@
       <section class="block card stack" id="docs-block" aria-labelledby="docs-title" hidden>
         <h2 id="docs-title">Documents</h2>
         <p class="hint">Where each important document is kept, and expiry dates in Renewals. Life OS never asks for document numbers, and none of this goes to the assistant or Google.</p>
-        <form id="docs-find" class="inline-form" role="search" novalidate>
+        <form id="docs-find" class="inline-form" role="search" aria-label="Documents" novalidate>
           <div class="field grow"><label for="docs-q">Find a document</label><input id="docs-q" type="search" autocomplete="off" placeholder="Where's Leo's passport?"></div>
           <button type="submit" class="btn btn-secondary">Find</button>
         </form>
@@ -864,6 +891,86 @@
           <button type="submit" class="btn btn-secondary">Save cover</button>
         </form>
         <a class="btn btn-secondary btn-block" href="/api/inventory.csv" download="home-contents.csv">Download the list as a spreadsheet</a>
+      </section>
+      <section class="block card stack" id="freezer-block" aria-labelledby="freezer-title" hidden>
+        <h2 id="freezer-title">Freezer</h2>
+        <p class="lead" id="freezer-summary" role="status"></p>
+        <ul class="list" id="freezer-list" aria-label="In the freezer"></ul>
+        <details class="card add-detail" id="freezer-add">
+          <summary>Put something in the freezer</summary>
+          <form id="freezer-form" class="stack" novalidate>
+            <div class="field"><label for="fz-name">What's going in?</label><input id="fz-name" type="text" autocomplete="off" placeholder="For example: chilli (batch cook)"></div>
+            <div class="field"><label for="fz-portions">How many portions</label><input id="fz-portions" type="number" inputmode="numeric" min="1" max="99" value="1"></div>
+            <div class="field"><label for="fz-where">Which drawer or shelf <span class="optional">(optional)</span></label><input id="fz-where" type="text" list="fz-wheres" autocomplete="off"><datalist id="fz-wheres"></datalist></div>
+            <button type="submit" class="btn btn-primary btn-block">Add to the freezer list</button>
+          </form>
+        </details>
+      </section>
+      <section class="block card stack" id="boxes-block" aria-labelledby="boxes-title" hidden>
+        <h2 id="boxes-title">Loft and garage boxes</h2>
+        <p class="hint">List what's in each box, print its label and stick it on. Scanning the label with a phone signed in to Life OS shows what's inside.</p>
+        <form id="boxes-find" class="inline-form" role="search" aria-label="Boxes" novalidate>
+          <div class="field grow"><label for="boxes-q">Find something in a box</label><input id="boxes-q" type="search" autocomplete="off" placeholder="Where are the Christmas lights?"></div>
+          <button type="submit" class="btn btn-secondary">Find it</button>
+        </form>
+        <p id="boxes-answer" role="status" aria-live="polite"></p>
+        <ul class="list" id="boxes-list" aria-label="Boxes"></ul>
+        <details class="card add-detail" id="boxes-add">
+          <summary>Add a box</summary>
+          <form id="box-form" class="stack" novalidate>
+            <div class="field"><label for="box-name">What's the box? <span class="optional">(a name)</span></label><input id="box-name" type="text" autocomplete="off" placeholder="For example: Christmas decorations"></div>
+            <div class="field"><label for="box-where">Where it lives</label><select id="box-where"></select></div>
+            <div class="field"><label for="box-items">What's in it</label><textarea id="box-items" rows="3" placeholder="One thing per line, or separated by commas"></textarea></div>
+            <button type="submit" class="btn btn-primary btn-block">Save box</button>
+          </form>
+        </details>
+        <a class="btn btn-secondary btn-block" href="labels.html" target="_blank" rel="noopener" id="boxes-print">Print box labels</a>
+      </section>
+      <section class="block card stack" id="guests-block" aria-labelledby="guests-title" hidden>
+        <h2 id="guests-title">Guests</h2>
+        <p class="lead" id="guests-summary" role="status"></p>
+        <div id="guests-visits" class="stack"></div>
+        <details class="card add-detail">
+          <summary>Someone's coming to stay</summary>
+          <form id="visit-form" class="stack" novalidate>
+            <div class="field"><label for="visit-name">Who's coming?</label><input id="visit-name" type="text" autocomplete="off"></div>
+            <div class="field"><label for="visit-arrive">Arriving</label><input id="visit-arrive" type="date"></div>
+            <div class="field"><label for="visit-leave">Leaving</label><input id="visit-leave" type="date"></div>
+            <div class="field"><label for="visit-room">Which room <span class="optional">(optional)</span></label><input id="visit-room" type="text" autocomplete="off" placeholder="For example: Spare room"></div>
+            <div class="field"><label for="visit-notes">Anything to remember <span class="optional">(food, allergies, cot)</span></label><input id="visit-notes" type="text" autocomplete="off"></div>
+            <button type="submit" class="btn btn-primary btn-block">Add visit</button>
+          </form>
+        </details>
+        <details class="card add-detail" id="wifi-setup">
+          <summary>Wi-Fi and house notes for guests</summary>
+          <form id="wifi-form" class="stack" novalidate>
+            <p class="hint">Kept on the Life OS computer only. The kitchen display shows the Wi-Fi code only while guests are staying (or for the days you choose).</p>
+            <div class="field"><label for="wifi-ssid">Wi-Fi network name</label><input id="wifi-ssid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+            <div class="field"><label for="wifi-password">Wi-Fi password</label><input id="wifi-password" type="password" autocomplete="off" placeholder="Leave blank to keep the saved one"></div>
+            <div class="field"><label for="wifi-security">Wi-Fi security</label><select id="wifi-security"><option value="WPA">WPA or WPA2 (most home Wi-Fi)</option><option value="WEP">WEP (old routers)</option><option value="nopass">No password</option></select></div>
+            <div class="field"><label for="guest-notes">House notes for guests</label><textarea id="guest-notes" rows="4" placeholder="One per line: heating, hot water, bins, parking..."></textarea></div>
+            <button type="submit" class="btn btn-primary btn-block">Save Wi-Fi and notes</button>
+          </form>
+        </details>
+        <div class="btn-row">
+          <a class="btn btn-secondary" href="guest.html" target="_blank" rel="noopener">Print the guest sheet</a>
+          <button type="button" class="btn btn-secondary" id="guest-mode" aria-pressed="false">Show Wi-Fi on the display</button>
+        </div>
+      </section>
+      <section class="block card stack" id="broken-block" aria-labelledby="broken-title">
+        <h2 id="broken-title">Something's broken</h2>
+        <p class="hint">Find the warranty and receipt, see your rights, then write to the shop or get it repaired. General information, not legal advice.</p>
+        <form id="broken-form" class="inline-form" novalidate>
+          <div class="field grow"><label for="broken-q">What's broken?</label><input id="broken-q" type="text" autocomplete="off" placeholder="For example: washing machine"></div>
+          <button type="submit" class="btn btn-secondary">Look it up</button>
+        </form>
+        <div id="broken-result" class="stack" role="status" aria-live="polite"></div>
+        <ul class="list compact" id="broken-claims" aria-label="Claims"></ul>
+      </section>
+      <section class="block card stack" id="routines-block" aria-labelledby="routines-title" hidden>
+        <h2 id="routines-title">Morning and bedtime routines</h2>
+        <p class="hint">On the kids' tablet (Routines), each child ticks their steps, with a countdown to leaving in the morning. A star for each routine finished.</p>
+        <div id="routines-kids" class="stack"></div>
       </section>
       <section class="block" aria-labelledby="manual-title">
         <h2 id="manual-title">Home manual</h2>
@@ -1115,12 +1222,33 @@
         <button class="btn btn-primary btn-block" type="button" id="notify-on">Turn on notifications</button>
         <button class="btn btn-secondary btn-block" type="button" id="notify-test" hidden>Send a test notification</button>
         <button class="btn btn-danger btn-block" type="button" id="notify-off" hidden>Turn off on this phone</button>
+        <details id="tomorrow-setup">
+          <summary>The evening "Tomorrow" message</summary>
+          <form id="tomorrow-form" class="stack" novalidate>
+            <p class="hint">One message with tomorrow's bins, school kit, first appointments, weather, dinner, parcels and birthdays, instead of separate ones.</p>
+            <div class="check-row"><input type="checkbox" id="tm-on"><label for="tm-on">Send the Tomorrow message</label></div>
+            <div class="field"><label for="tm-at">Time to send it</label><input id="tm-at" type="time" min="16:00" max="21:59" step="600"></div>
+            <div class="check-row"><input type="checkbox" id="tm-speak"><label for="tm-speak">Say it on the kitchen speaker too (never in quiet hours)</label></div>
+            <button type="submit" class="btn btn-primary btn-block">Save Tomorrow message</button>
+            <p class="meta" id="tm-preview" role="status" aria-live="polite"></p>
+          </form>
+        </details>
       </section>
 
       <section class="block card stack" id="google" aria-labelledby="google-title">
         <h2 id="google-title">Google accounts</h2>
         <p class="hint">Each person connects their own account, ideally on their own phone. Calendars are combined. Email access is optional and only ever drafts; nothing is sent without a tap.</p>
         <ol class="checklist" id="google-checklist" aria-label="Google connection checklist"></ol>
+        <button type="button" class="btn btn-primary btn-block" id="gsetup-run">Check the Google set-up</button>
+        <p id="gsetup-summary" role="status" aria-live="polite"></p>
+        <ol class="checklist" id="gsetup-steps" aria-label="Google set-up check" hidden></ol>
+        <details id="mailtodo-help" class="card add-detail">
+          <summary>Turn an email into a to-do</summary>
+          <div class="stack">
+            <p class="hint">In Gmail (on your phone too), give an email the label <strong>Life OS</strong>. Within ten minutes it's a to-do with a link back to the email, and the label changes to Life OS/Added. Needs Gmail ticked when you connect.</p>
+            <button type="button" class="btn btn-secondary btn-block" id="mailtodo-run">Check for labelled emails now</button>
+          </div>
+        </details>
         <details id="google-client" class="card add-detail">
           <summary id="google-client-summary">Add the Google sign-in file</summary>
           <div class="stack">
@@ -1193,5 +1321,7 @@
   <script src="app.js" defer></script>
   <script src="more.js" defer></script>
   <script src="extra.js" defer></script>
+  <script src="qrdraw.js" defer></script>
+  <script src="next.js" defer></script>
 </body>
 </html>

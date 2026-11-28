@@ -414,12 +414,12 @@
   });
 
   // ---------- Meals: what can we make? ----------
-  async function shrink(file) {
+  async function shrink(file, max = 1600) {
     // Phone photos are big; a 1600px JPEG is plenty to read and keeps the assistant's cost down. Also turns iPhone
     // HEIC photos into JPEG where the browser can open them.
     try {
       const bmp = await createImageBitmap(file);
-      const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+      const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
       const c = document.createElement("canvas");
       c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
       c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
@@ -456,17 +456,18 @@
     ev.preventDefault();
     const file = $("#fridge-photo").files[0];
     const text = $("#fridge-text").value.trim();
-    if (!file && !text) { toast("Take a photo or type what's in the fridge.", true); $("#fridge-photo").focus(); return; }
+    const useFreezer = $("#fridge-freezer").checked;
+    if (!file && !text && !useFreezer) { toast("Take a photo or type what's in the fridge.", true); $("#fridge-photo").focus(); return; }
     busy(ev.submitter, async () => {
       $("#fridge-result").replaceChildren(el("p", { class: "meta", text: file ? "Looking at the photo..." : "Matching your dinners..." }));
       try {
         let r;
         if (file) {
           const blob = await shrink(file);
-          r = await api(`/api/fridge/photo?note=${encodeURIComponent(text.slice(0, 200))}`, { method: "POST", body: blob, headers: { "Content-Type": blob.type || "application/octet-stream" } });
+          r = await api(`/api/fridge/photo?note=${encodeURIComponent(text.slice(0, 200))}&freezer=${useFreezer}`, { method: "POST", body: blob, headers: { "Content-Type": blob.type || "application/octet-stream" } });
           $("#fridge-photo").value = "";
         } else {
-          r = await api("/api/fridge/text", { method: "POST", body: { text } });
+          r = await api("/api/fridge/text", { method: "POST", body: { text, freezer: useFreezer } });
         }
         showDinners(r);
       } catch (e) { $("#fridge-result").replaceChildren(); throw e; }
@@ -520,5 +521,5 @@
     } else st.textContent = r.problem;
   }));
 
-  window.LifeOSExtra = { today, home, settings };
+  window.LifeOSExtra = { today, home, settings, shrink };
 })();

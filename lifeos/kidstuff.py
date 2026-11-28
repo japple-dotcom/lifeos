@@ -148,7 +148,9 @@ def stars(svc, day: date | None = None) -> dict:
     from . import household
     out = []
     for kid in _kids(svc):
-        per = {d.isoformat(): {"chores": 0, "reading": 0, "homework": 0} for d in days}
+        from . import routines
+        per = {d.isoformat(): {"chores": 0, "reading": 0, "homework": 0,
+                               "routines": routines.stars_for(svc, kid, d) if d <= today else 0} for d in days}
         for c in chores:
             if c.get("who") == kid and not household.is_money_move(c.get("chore", "")):
                 d = (c.get("at") or "")[:10]

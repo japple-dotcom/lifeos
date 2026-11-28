@@ -123,6 +123,14 @@
     const kitLine = $("#w-kit");
     kitLine.hidden = !(kit && kit.items && kit.items.length);
     kitLine.textContent = kitLine.hidden ? "" : `School tomorrow: ${kit.text}`;
+    const gw = data.guests && data.guests.wifi;
+    $("#w-guests-block").hidden = !gw;
+    if (gw) {
+      $("#w-guests-title").textContent = `${data.guests.welcome} Wi-Fi`;
+      $("#w-wifi-ssid").textContent = `Network: ${gw.ssid}`;
+      $("#w-wifi-pass").textContent = gw.password ? `Password: ${gw.password}` : "No password";
+      if (window.LifeOSQR) $("#w-wifi-qr").replaceChildren(window.LifeOSQR.draw(gw.qr, 150, `Code to join the Wi-Fi ${gw.ssid}`));
+    }
     const xmas = data.christmas;
     $("#w-xmas").hidden = !xmas;
     $("#w-xmas").textContent = !xmas ? "" : xmas.days_to_go === 0 ? "Happy Christmas!" :

@@ -16,6 +16,7 @@ import secrets
 from datetime import date, timedelta
 
 from . import files
+from .dates import fmt as _dfmt
 
 BASE = ["Phone chargers", "Toothbrushes and toothpaste", "Medicines", "Glasses or contact lenses", "Pyjamas",
         "Toiletries", "Clothes for {days} days", "Underwear and socks"]
@@ -78,7 +79,7 @@ def passport_warnings(svc, trip: dict) -> list[str]:
     if not trip.get("abroad"):
         return []
     limit = _d(trip["end"]) + timedelta(days=183)
-    return [f"{r['name']} runs out on {_d(r['due_date']).strftime('%-d %B %Y')}: renew it before {trip['name']}."
+    return [f"{r['name']} runs out on {_d(r['due_date']).strftime(_dfmt('%-d %B %Y'))}: renew it before {trip['name']}."
             for r in svc.store.renewals() if "passport" in r["name"].lower() and _d(r["due_date"]) <= limit]
 
 

@@ -199,7 +199,9 @@ def tomorrow(svc, today: date | None = None) -> list[str]:
 
 def evening(svc, now: datetime | None = None) -> str:
     """Run every 10 minutes in the evening: once the reminder time has passed, remind about tomorrow's bins once."""
-    from . import household, voice
+    from . import household, tomorrow as tomorrow_msg, voice
+    if tomorrow_msg.digest_on(svc):
+        return ""  # it's in the one "Tomorrow" message instead
     tz = voice._tz(svc)
     now = now or datetime.now(tz)
     c = cfg(svc)
